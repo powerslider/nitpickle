@@ -66,8 +66,9 @@ then, edit by hand. Delete anything that doesn't reflect how you actually work.
   Types: feat, fix, build, chore, ci, docs, style, refactor, perf, test.
   Breaking changes use `!` after the type or scope, or a `BREAKING CHANGE:` footer.
 - Subject in imperative mood, no trailing period, 72 characters or fewer.
-- Body explains the why, not the what. Wrap at 72 columns.
-- The footer must contain, in this order, an issue reference and a sign-off:
+- Body explains the why, not the what, as bullet points, one per distinct
+  reason. Wrap at 72 columns.
+- The footer contains an optional issue reference followed by a sign-off:
 
   ```
   resolves <issue_id>
@@ -76,7 +77,8 @@ then, edit by hand. Delete anything that doesn't reflect how you actually work.
   ```
 
 - `<issue_id>` is the tracked issue for the change. Derive it from the branch
-  name or the task context. If none is known, ask before committing.
+  name or the task context. If none is known, skip the `resolves` line and write
+  a footer with the sign-off only.
 - The sign-off name and email come from git config (`git config user.name`,
   `git config user.email`). Split the configured name into first and last. Do not
   invent them. For this repo that resolves to:
@@ -88,8 +90,8 @@ Example:
   ```
   fix(policy): reject unknown rule keys instead of ignoring them
 
-  An unknown key in policy.yaml was silently dropped, which hid typos.
-  Fail loudly so a misnamed rule is caught at load time.
+  - An unknown key in policy.yaml was silently dropped, which hid typos.
+    Fail loudly so a misnamed rule is caught at load time.
 
   resolves ENG-412
 

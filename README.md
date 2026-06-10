@@ -78,8 +78,8 @@ Or enable it automatically in a repo via `.claude/settings.json`:
 
 Once installed, the skills are invoked as `/nitpickle:bootstrap`,
 `/nitpickle:preflight`, `/nitpickle:review-pr`, `/nitpickle:grill`,
-`/nitpickle:feature-plan`, and `/nitpickle:design-spec`. The house-style hook
-activates automatically.
+`/nitpickle:feature-plan`, `/nitpickle:design-spec`, and
+`/nitpickle:commit-msg`. The house-style hook activates automatically.
 
 ## Getting started
 

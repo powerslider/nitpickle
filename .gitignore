@@ -1,0 +1,2 @@
+# Per-developer behavioral telemetry, grows a line per pre-flight run
+.nitpickle/validation-log.md

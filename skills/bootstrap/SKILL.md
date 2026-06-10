@@ -91,6 +91,11 @@ it. The file is meant to grow.
 Write `.nitpickle/validation-log.md` with the header and the empty table that
 `/nitpickle:preflight` appends to.
 
+This file is per-developer behavioral telemetry that grows a line every
+pre-flight run, so it is local, not shared. Add `.nitpickle/validation-log.md`
+to the repo's `.gitignore` (create the file if absent). The other `.nitpickle/`
+artifacts stay tracked as shared conventions.
+
 ## 6. Preferences
 
 Global preferences at `~/.claude/nitpickle/preferences.md` already apply. Create a
