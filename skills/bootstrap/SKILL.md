@@ -23,9 +23,18 @@ these as clues that the glossary needs a pass:
 - A core type or module was renamed, so the glossary and the code disagree.
 - A plan or change introduces a concept the glossary does not yet cover.
 
-On a repo that is already set up, this is a glossary refresh, not a rebuild.
-Propose additive updates to `CONTEXT.md` and leave the other artifacts alone
-unless the user asks. Never clobber (see below).
+On a repo that is already set up, this is a glossary refresh, not a rebuild. Run
+Section 3 against the current code and propose additive edits to `CONTEXT.md`.
+Skip the toolchain, policy, ADR, and validation-log steps unless one of those
+artifacts is missing. Editing `CONTEXT.md` additively, with the user's
+confirmation, is the one sanctioned exception to "do not clobber" below. Leave
+the other artifacts alone unless the user asks.
+
+When you surface candidate terms on a refresh, present the conceptual grouping
+and the domain-bearing judgment as an open proposal the user can reshape, before
+applying anything. Do not reduce curation to a pick-from-a-menu choice. The user
+often has a structural distinction in mind (which terms are domain vs infra, how
+they group) that only surfaces in discussion.
 
 ## Do not clobber
 
@@ -64,15 +73,30 @@ curated**, so draft and confirm. Do not dump.
 - Explore the codebase (use the `Explore` agent) for the domain language:
   top-level modules and packages, core domain types, the nouns that recur across
   names. Look for the ubiquitous language, not the framework plumbing.
+- On a refresh, read the existing `CONTEXT.md` first and surface only terms that
+  are new or whose meaning has shifted. Do not re-propose terms already curated.
 - Extract 5 to 15 **candidate core terms**. Each is "**Term** - one or two
   sentences of essence", glossary style. Terminology only. No code, no file
   paths, no implementation, no decisions.
+- Apply a domain-bearing test to each candidate. The question is not "does this
+  recur" but "does it carry meaning a reviewer needs to understand the product,
+  or is it runtime mechanics that describe the machine." Terms that name a
+  product behavior or a domain entity (a `Finding`, a `Proof`) belong. Pure
+  execution plumbing (a run record, a generic queue) usually does not, even when
+  it recurs heavily. When a term is borderline, recommend dropping it and say
+  why, rather than padding the glossary.
 - Present the candidates and let the user confirm, rename, cut, or add. Glossary
   quality matters more than coverage. If the user is away, write a conservative
   starter set and mark it clearly as a draft to refine.
 - Write `CONTEXT.md` with the "How to maintain this file" preamble and grouped
-  headings, in rough dependency order. For a multi-context repo, write a
-  `CONTEXT-MAP.md` and a `CONTEXT.md` per context instead.
+  headings, in rough dependency order. When terms span layers of one domain
+  (e.g. an app-domain layer and an agent or runtime layer), keep them in the
+  same glossary under separate headings. Do not split into multiple files for
+  layering. Group terms that form one flow together under a heading named for
+  that flow, rather than listing them flat or alphabetically. Reserve a
+  `CONTEXT-MAP.md` (a short index naming each context and linking to its own
+  `CONTEXT.md`) plus a `CONTEXT.md` per context strictly for genuinely separate
+  bounded contexts, not for layers within one.
 
 A change that later needs a concept absent from the glossary is the prompt to add
 it. The file is meant to grow.
@@ -104,9 +128,11 @@ then keep it to what differs from global. Do not duplicate global.
 
 ## 7. Summarize
 
-List what was created and what needs a human pass, especially the glossary. Point
-the user at `/init` for the complementary `CLAUDE.md` if they have not run it, and
-at `/nitpickle:preflight` for their next branch.
+List what was created and what needs a human pass, especially the glossary. Call
+out any term you dropped as runtime mechanics and any heading grouping you chose,
+so the user can override. Point the user at `/init` for the complementary
+`CLAUDE.md` if they have not run it, and at `/nitpickle:preflight` for their next
+branch.
 
 ## Boundaries
 
