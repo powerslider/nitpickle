@@ -76,7 +76,7 @@ Or enable it automatically in a repo via `.claude/settings.json`:
 }
 ```
 
-Once installed, the skills are invoked as `/nitpickle:init`,
+Once installed, the skills are invoked as `/nitpickle:bootstrap`,
 `/nitpickle:preflight`, `/nitpickle:review-pr`, `/nitpickle:grill`,
 `/nitpickle:feature-plan`, and `/nitpickle:design-spec`. The house-style hook
 activates automatically.
@@ -86,7 +86,7 @@ activates automatically.
 1. Install the global defaults once so every repo inherits sensible config:
    `cp defaults/nitpickle/* ~/.claude/nitpickle/`. See
    [defaults/README.md](defaults/README.md).
-2. In a repo, run `/nitpickle:init` to scaffold the convention layer. It detects
+2. In a repo, run `/nitpickle:bootstrap` to scaffold the convention layer. It detects
    the toolchain for `.nitpickle/policy.yaml`, drafts a starter `CONTEXT.md`
    glossary, and lays down `docs/adr/`. Run `/init` too for the complementary
    `CLAUDE.md`. See [.nitpickle/README.md](.nitpickle/README.md) for what each
@@ -127,8 +127,9 @@ flowchart LR
   passes it.
 - `preflight` (your branch) and `review-pr` (someone else's) are the **same proof
   engine**, one pointed inward, one outward.
-- `init` is one-time setup, not part of the per-change chain. It scaffolds the
-  conventions the other skills consume.
+- `bootstrap` is setup, not part of the per-change chain. It scaffolds the
+  conventions the other skills consume, and re-runs to refresh the `CONTEXT.md`
+  glossary when the ubiquitous language drifts.
 
 You don't have to use every stage. Small change? Skip straight to `preflight`.
 Just reviewing a teammate's PR? Jump to `review-pr`. The chain is a default, not
@@ -138,7 +139,7 @@ a mandate.
 
 | Skill | Use it when… | Reads | Produces |
 | --- | --- | --- | --- |
-| **init** | setting up NitPickle in a repo (one-time) | the codebase, toolchain, `~/.claude/nitpickle/` | `.nitpickle/`, `CONTEXT.md`, `docs/adr/` |
+| **bootstrap** | setting up NitPickle in a repo, or refreshing the glossary when the ubiquitous language drifts | the codebase, toolchain, `~/.claude/nitpickle/` | `.nitpickle/`, `CONTEXT.md`, `docs/adr/` |
 | **feature-plan** | you have a rough idea and need a researched, phased plan | codebase, web, `CONTEXT.md`, `docs/adr/` | `docs/plans/<slug>.md` |
 | **grill** | you have a plan/approach to stress-test before coding | the plan, `CONTEXT.md`, `docs/adr/`, `preferences.md` | approved plan + inline `CONTEXT`/ADR updates |
 | **design-spec** | you need an architectural guide for a system/component | the system, `CONTEXT.md`, `docs/adr/` | `docs/design/<slug>.md` |
@@ -150,7 +151,7 @@ a mandate.
 ```mermaid
 flowchart TD
     Q{What are you doing?}
-    Q -->|Setting up a new repo| IN[init]
+    Q -->|Setting up a new repo| IN[bootstrap]
     Q -->|Starting new work| A{How clear is the path?}
     A -->|Fuzzy, needs research| FP[feature-plan]
     A -->|Clear idea, want it challenged| GR[grill]
@@ -167,9 +168,10 @@ flowchart TD
     class IN,FP,GR,DS,PF,RV s
 ```
 
-### init - scaffold the convention layer
+### bootstrap - scaffold the convention layer
 
-**When:** setting up NitPickle in a repo, once.
+**When:** setting up NitPickle in a repo, or refreshing the `CONTEXT.md`
+glossary when the ubiquitous language has drifted.
 
 Detects the toolchain and writes `.nitpickle/policy.yaml`, drafts a starter
 `CONTEXT.md` glossary from the codebase (drafted and confirmed, never
@@ -273,7 +275,7 @@ sequenceDiagram
 ## The shared substrate
 
 The review and planning skills read the same per-repo conventions and run on the
-same proof engine (`init` bootstraps those conventions). This is what makes
+same proof engine (`bootstrap` sets up those conventions). This is what makes
 findings consistent and trustworthy across the pipeline.
 
 ```mermaid
