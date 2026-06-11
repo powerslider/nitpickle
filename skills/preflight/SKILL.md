@@ -24,6 +24,10 @@ its defaults):
 - `docs/adr/` - recorded decisions. **Do not re-litigate them.** A finding that
   contradicts an accepted ADR is raised as a `question`, never asserted as
   `blocking`.
+- `docs/plans/*.md` - the approved plan for this branch, if one exists. Scan
+  for a file whose `Branch:` line lists the current branch exactly (the line
+  may hold several branches, one per phase) and whose `Status:` is approved.
+  No match: skip the plan check with a one-line note. Never fuzzy-match.
 
 Glossary, decisions, and taste are three separate inputs - apply all three.
 
@@ -99,6 +103,11 @@ Spend judgment only where linters can't: missing tests for error/edge paths,
 ignored `context` cancellation, dropped error context, concurrency hazards a
 static pass misses, public API changes without migration notes, anything in
 `policy.yaml: rules` or `preferences.md`.
+
+**Plan intent check** (only when an approved plan matched this branch): verify
+the branch delivers what the plan's matching phase intends - its goal, scope,
+and non-goals. A mismatch (the diff does less, more, or different) is a
+Finding. This is a scoped intent comparison, not a re-grill of the plan.
 
 For abstraction findings, use the deletion test and the deep/shallow-module
 vocabulary instead of a vague "premature abstraction": apply the deletion test

@@ -1,6 +1,6 @@
 ---
 name: grill
-description: Plan gate for NitPickle. Before any non-trivial patch, interrogate the plan one question at a time, challenge it against the repo's domain glossary (CONTEXT.md), decisions (docs/adr/), and the user's taste (.nitpickle/preferences.md), and produce an approved plan artifact that implementation runs against. No code is written until the plan passes. Adapted from Matt Pocock's grill-with-docs. Trigger when the user wants to plan a change, stress-test an approach, or says "grill this", "plan this", "let's design this before coding".
+description: Plan gate for NitPickle. Before any non-trivial patch, interrogate an existing plan or approach one question at a time, challenge it against the repo's domain glossary (CONTEXT.md), decisions (docs/adr/), and the user's taste (.nitpickle/preferences.md), and persist the approved plan to docs/plans/ for implementation and preflight to consume. No code is written until the plan passes. Reads a feature-plan document when one exists. Adapted from Matt Pocock's grill-with-docs. Trigger when the user already has a plan, approach, or feature-plan output to stress-test, or says "grill this", "challenge this plan", "stress-test this approach", "let's design this before coding". For a fuzzy idea that still needs research, use feature-plan first.
 ---
 
 # Grill - the plan gate
@@ -24,6 +24,11 @@ Read, if present (skip silently if absent):
   contradicts an ADR, surface it explicitly and ask before proceeding.
 - `.nitpickle/preferences.md` - the user's taste. Apply it to your recommendations.
 - `.nitpickle/policy.yaml` - per-repo rules and commands.
+- The plan under interrogation. When it came from `/nitpickle:feature-plan`,
+  read its document in `docs/plans/` (the user names it, otherwise take the one
+  whose Status is not yet approved) **before asking anything**. Its phases,
+  open questions, and convergence log are the tree you walk. When the plan is
+  ad hoc (described in chat), grill it as given.
 
 <!-- nitpickle:resolution -->
 Config resolution for `policy.yaml` and `preferences.md`: read the repo-local
@@ -94,6 +99,20 @@ ADRs/glossary   what was recorded this session
 
 Present it and ask for explicit approval. Only after approval does implementation
 begin. The plan is the contract `/nitpickle:preflight` checks the resulting branch against.
+
+On approval, persist it:
+
+- **Grilling a `docs/plans/<slug>.md` document**: update it in place. Flip its
+  `Status:` header to `approved` and append a "Plan gate decisions" section
+  listing what this session resolved. One artifact, one history. Never a
+  second file.
+- **Grilling an ad-hoc plan**: derive a slug from the plan's title, create
+  `docs/plans/<slug>.md` with `Status: approved` and the artifact above, and
+  say so.
+- **Branch line**: when the implementation branch is known, write
+  `Branch: <name>` under the Status header (the line may hold a list, one
+  branch per phase). `/nitpickle:preflight` exact-matches the current branch
+  against it to find this contract.
 
 ## Boundaries
 

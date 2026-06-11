@@ -1,6 +1,6 @@
 ---
 name: feature-plan
-description: Develop a new feature by producing a deeply-researched, phased implementation plan. Start from a rough idea, perform extensive multi-source analysis (codebase, web, other references), break the work into independently-shippable phases, and iterate to convergence - refining until no meaningful improvements remain. Use when the user wants to plan a feature, scope new work, create an implementation plan, break a feature into phases, or says "plan this feature", "how should we build X", "create a build plan".
+description: Develop a new feature by producing a deeply-researched, phased implementation plan. Start from a rough or fuzzy idea that still needs research, perform extensive multi-source analysis (codebase, web, other references), break the work into independently-shippable phases, and iterate to convergence - refining until no meaningful improvements remain. Use when the user wants to plan a feature or change whose path is not yet clear, scope new work, create an implementation plan, break a feature into phases, or says "plan this", "plan this feature", "how should we build X", "create a build plan". For challenging a plan that already exists, use grill instead.
 ---
 
 # Feature plan - rough idea to phased, converged plan
@@ -114,7 +114,8 @@ heavy.
 ## Boundaries
 
 - This skill plans. It does not write production code. Its outputs are the plan
-  document, possibly new glossary candidates / ADR suggestions, and open
+  document, possibly new glossary candidates (routed to `/nitpickle:bootstrap`,
+  which owns durable glossary refresh) / ADR suggestions, and open
   questions.
 - Honesty over false completeness: a plan that names its remaining unknowns beats
   one that pretends none exist.

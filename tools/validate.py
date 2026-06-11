@@ -84,6 +84,13 @@ RETIRED_PHRASES = (
     "see `docs/PRODUCT_SPEC.md`",
 )
 
+# Trigger phrases that must appear in at most one skill description, so a
+# request like "plan this" is never claimed by two skills at once.
+COLLISION_PHRASES = (
+    '"plan this"',
+    "stress-test",
+)
+
 failures = []
 warnings = []
 
@@ -235,6 +242,21 @@ def check_banned_characters(root, files):
                     fail(f"{rel} contains {entity} in markdown prose")
 
 
+def check_collision_phrases(root, skill_names):
+    for phrase in COLLISION_PHRASES:
+        owners = []
+        for name in skill_names:
+            fm = frontmatter(read(os.path.join(root, "skills", name, "SKILL.md")))
+            desc = raw_scalar(fm, "description") if fm else None
+            if desc and phrase in desc:
+                owners.append(name)
+        if len(owners) > 1:
+            fail(
+                f"trigger phrase {phrase!r} is claimed by more than one skill "
+                f"description: {', '.join(owners)}"
+            )
+
+
 def check_retired_phrases(root, files):
     for rel in files:
         if not rel.endswith(".md"):
@@ -279,6 +301,7 @@ def main():
     check_versions(root)
     check_banned_characters(root, files)
     check_retired_phrases(root, files)
+    check_collision_phrases(root, skill_names)
     check_canonical_blocks(root)
 
     for w in warnings:

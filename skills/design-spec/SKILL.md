@@ -104,6 +104,9 @@ inline instead, render it in the response and skip the file.
 
 ## Relationship to other NitPickle skills
 
+- **`/nitpickle:feature-plan`** links or generates a spec from its Approach
+  section when a feature is architecturally significant, instead of inlining
+  architecture in the plan.
 - **`/nitpickle:grill`** is the interactive plan gate for a *change*. `design-spec`
   documents how a system *is* (or is intended to be). A spec can be the input a
   grilling session stress-tests, or the durable output once a plan is settled.
