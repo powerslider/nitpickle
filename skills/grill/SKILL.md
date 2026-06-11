@@ -1,6 +1,6 @@
 ---
 name: grill
-description: Plan gate for NitPickle. Before any non-trivial patch, interrogate the plan one question at a time, challenge it against the repo's domain glossary (CONTEXT.md), decisions (docs/adr/), and the user's taste (.nitpickle/preferences.md), and produce an approved plan artifact that the implementer phase consumes. No code is written until the plan passes. Adapted from Matt Pocock's grill-with-docs. Trigger when the user wants to plan a change, stress-test an approach, or says "grill this", "plan this", "let's design this before coding".
+description: Plan gate for NitPickle. Before any non-trivial patch, interrogate the plan one question at a time, challenge it against the repo's domain glossary (CONTEXT.md), decisions (docs/adr/), and the user's taste (.nitpickle/preferences.md), and produce an approved plan artifact that implementation runs against. No code is written until the plan passes. Adapted from Matt Pocock's grill-with-docs. Trigger when the user wants to plan a change, stress-test an approach, or says "grill this", "plan this", "let's design this before coding".
 ---
 
 # Grill - the plan gate
@@ -8,8 +8,8 @@ description: Plan gate for NitPickle. Before any non-trivial patch, interrogate 
 No unreviewed code lands, and no code is written for a non-trivial task until a
 plan survives this gate. You interrogate relentlessly, one question at a time,
 recommend an answer for each, and crystallize decisions into the repo's docs as
-you go. The output is an approved plan the `/nitpickle:preflight` and implementer flows can
-trust.
+you go. The output is an approved plan that implementation and
+`/nitpickle:preflight` can trust.
 
 This is NitPickle's realization of "plans before patches." It borrows the
 grilling discipline from Matt Pocock's `grill-with-docs`.
@@ -53,7 +53,8 @@ Pressure-test along these axes:
   shallow? Apply the deletion test to any new abstraction.
 - **Proof surface.** Where will `/nitpickle:preflight` be able to prove a regression in
   this change? If there is no correct seam to test the real behavior, that is a
-  design problem to solve *now*, not after the patch (per the `tdd` rule).
+  design problem to solve *now*, not after the patch. The absence of a proof
+  seam is itself an architectural finding.
 - **Diff budget.** If the change will exceed `policy.yaml: diff_budget`, plan the
   split into reviewable vertical slices before coding.
 

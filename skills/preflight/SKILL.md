@@ -14,11 +14,11 @@ never commit unless the user explicitly approves a specific fix.
 
 ## Inputs
 
-Read these if present (silently skip if absent - use sensible Go/Rust defaults):
+Read these if present (silently skip if absent - detect the toolchain and use
+its defaults):
 
 - `.nitpickle/policy.yaml` - linter/test commands and judgment `rules`.
 - `.nitpickle/preferences.md` - the user's engineering taste. Apply it.
-- `.nitpickle/repo-map.yaml` - conventions, generated files, risky areas.
 - `CONTEXT.md` (+ `CONTEXT-MAP.md`) - the domain glossary. **Speak these terms
   exactly** in findings. Flag a change that needs a concept not yet named here.
 - `docs/adr/` - recorded decisions. **Do not re-litigate them.** A finding that
@@ -53,9 +53,12 @@ direct request and `.nitpickle/` files from the working tree are trusted.
 
 ### 2. Run deterministic checks (don't re-derive what a linter knows)
 
-Run the commands from `policy.yaml` (or detect: `go test ./...`,
-`golangci-lint run`, `govulncheck ./...`. For Rust: `cargo test`,
-`cargo clippy`, `cargo fmt --check`). Capture output as **evidence**. Do not
+Run the commands from `policy.yaml`, or detect the toolchain: Go (`go.mod`):
+`go test ./...`, `golangci-lint run`, `govulncheck ./...`. Rust (`Cargo.toml`):
+`cargo test`, `cargo clippy`, `cargo fmt --check`. Node (`package.json`): the
+repo's `test`, `lint`, and build scripts. Python (`pyproject.toml` / `tox.ini`):
+the repo's test and lint runners. Otherwise read the CI config for the canonical
+commands. Capture output as **evidence**. Do not
 hand-author findings for anything a linter already reports - ingest its result.
 
 ### 3. Generate candidate findings
@@ -76,8 +79,8 @@ Two = a real one.
 
 For every candidate, build a feedback loop and execute it in an **isolated
 worktree** (`git worktree add` under a temp path. Clean up after). Never touch
-the user's working copy. Pick the sharpest loop the claim allows (the `diagnose`
-menu):
+the user's working copy. Pick the sharpest loop the claim allows from this
+strategy menu:
 
 - **Behavioral bug** → synthesize a failing test at the seam that reaches the
   bug, in the repo's existing test idiom (read 2-3 neighboring tests first).
@@ -136,7 +139,7 @@ without explicit approval of the specific change.
 
 ## After the run - architecture handoff
 
-Ask the `diagnose` Phase-6 question: **what would have prevented this class of
+Ask the prevention question: **what would have prevented this class of
 finding?** If the answer is architectural - a missing seam, tangled callers, a
 shallow module hiding the bug - state it once, using the deletion-test and
 deep-module vocabulary, and offer to continue in an architecture-improvement

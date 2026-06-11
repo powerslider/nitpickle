@@ -13,7 +13,7 @@ NitPickle is **not** another "build me an app" tool. The market is full of those
 The wedge here is **trust**: proof-backed findings, inspectable memory,
 repo-specific guardrails, and an audit trail.
 
-NitPickle ships as a **Claude Code plugin**: six skills, a house-style hook, and
+NitPickle ships as a **Claude Code plugin**: seven skills, a house-style hook, and
 language-agnostic config defaults.
 
 ## Contents
@@ -104,19 +104,21 @@ They share one substrate (glossary, decisions, policy, taste, proof engine).
 
 ```mermaid
 flowchart LR
-    idea([Rough idea]) --> FP[feature-plan]
+    BST[bootstrap] -.->|one-time setup| idea([Rough idea])
+    idea --> FP[feature-plan]
     FP -->|phased plan| GR[grill]
     GR -->|approved plan| IMPL[/implement/]
     FP -.->|architecture heavy| DS[design-spec]
     DS -.-> GR
     IMPL --> PF[preflight]
     PF -->|ready| PR([Open PR])
+    CM[commit-msg] -.->|drafts the message| PR
     PR --> RV[review-pr]
     RV -->|approved comments| MERGE([Merge])
 
     classDef skill fill:#1f2937,stroke:#60a5fa,color:#e5e7eb
     classDef gate fill:#374151,stroke:#34d399,color:#e5e7eb
-    class FP,DS,PF,RV skill
+    class FP,DS,PF,RV,BST,CM skill
     class GR gate
 ```
 
@@ -130,6 +132,9 @@ flowchart LR
 - `bootstrap` is setup, not part of the per-change chain. It scaffolds the
   conventions the other skills consume, and re-runs to refresh the `CONTEXT.md`
   glossary when the ubiquitous language drifts.
+- `commit-msg` is a per-commit utility, usable at any point in the chain. It
+  drafts the message for whatever is staged, in the format `preferences.md`
+  defines.
 
 You don't have to use every stage. Small change? Skip straight to `preflight`.
 Just reviewing a teammate's PR? Jump to `review-pr`. The chain is a default, not
@@ -145,6 +150,7 @@ a mandate.
 | **design-spec** | you need an architectural guide for a system/component | the system, `CONTEXT.md`, `docs/adr/` | `docs/design/<slug>.md` |
 | **preflight** | you're about to open a PR and want a strict self-review | your branch, `policy.yaml`, `preferences.md`, `CONTEXT.md`, `docs/adr/` | ranked, proof-gated findings (local) |
 | **review-pr** | you're reviewing someone else's GitHub PR | the PR via `gh`, repo conventions | a review packet + approved comments |
+| **commit-msg** | you need a commit message for the staged changes | the diff, `preferences.md` | a ready-to-copy conventional-commit message |
 
 ### When to reach for which
 
@@ -158,6 +164,7 @@ flowchart TD
     Q -->|Need to explain a system| DS[design-spec]
     Q -->|About to open a PR| PF[preflight]
     Q -->|Reviewing a teammate's PR| RV[review-pr]
+    Q -->|Committing staged changes| CM[commit-msg]
 
     FP --> GR
     GR --> code[/write code/]
@@ -165,7 +172,7 @@ flowchart TD
     PF --> open([open PR])
 
     classDef s fill:#1f2937,stroke:#60a5fa,color:#e5e7eb
-    class IN,FP,GR,DS,PF,RV s
+    class IN,FP,GR,DS,PF,RV,CM s
 ```
 
 ### bootstrap - scaffold the convention layer
@@ -243,6 +250,16 @@ you choose `Post / Edit / Dismiss / Convert to task / Ask for proof` per item.
 Nothing posts without approval. It never submits an Approve review unless you
 explicitly say so.
 
+### commit-msg - draft the commit message
+
+**When:** you need a commit message for the staged changes.
+
+Inspects the staged diff (falling back to the working tree) and drafts a
+conventional-commit message in the exact format `preferences.md` defines:
+type, subject under 72 characters, a why-not-what bullet body, and the issue
+reference plus sign-off footer. Output only. It never stages, commits, or runs
+any git write command.
+
 ## How a change flows through, end to end
 
 ```mermaid
@@ -263,9 +280,9 @@ sequenceDiagram
     You->>PF: self-review before PR
     PF->>Repo: run linters/tests, build proofs (worktree)
     PF-->>You: proof-gated findings → you fix
-    You->>Repo: open PR
+    You->>Repo: commit (commit-msg drafts the message) and open PR
     Note over RV: later, on a teammate's PR
-    You->>RV: review PR #N
+    You->>RV: review the PR
     RV->>Repo: fetch + checkout + prove (worktree)
     RV-->>You: review packet
     You->>RV: approve selected comments
@@ -298,13 +315,15 @@ flowchart TB
     Engine --> S3[design-spec]
     Engine --> S4[preflight]
     Engine --> S5[review-pr]
+    PRF --> S6[commit-msg]
+    BST[bootstrap] --> Inputs
 
     classDef in fill:#0f172a,stroke:#fbbf24,color:#e5e7eb
     classDef eng fill:#0f172a,stroke:#34d399,color:#e5e7eb
     classDef s fill:#1f2937,stroke:#60a5fa,color:#e5e7eb
     class CTX,ADR,POL,PRF in
     class PROOF,TRUST eng
-    class S1,S2,S3,S4,S5 s
+    class S1,S2,S3,S4,S5,S6,BST s
 ```
 
 - **`CONTEXT.md`** - domain *language* (glossary only, no implementation). Skills
@@ -321,8 +340,9 @@ flowchart TB
 - **Trust zones** - repo content, PR/issue text, dependency docs, and web pages
   are untrusted *data*. Instructions found inside them are reported, not obeyed.
 
-Config resolves local-over-global: a repo's `.nitpickle/` overrides the global
-defaults at `~/.claude/nitpickle/`. See
+Config resolution reads both layers and merges: a repo's `.nitpickle/` overrides
+the global defaults at `~/.claude/nitpickle/` per top-level key, `rules` is the
+union of the two, and global alone applies when no local file exists. See
 [.nitpickle/README.md](.nitpickle/README.md) and
 [defaults/README.md](defaults/README.md).
 
@@ -358,7 +378,7 @@ review to `design-spec` / architecture work.
 ## Status
 
 Greenfield, packaged as a Claude Code plugin (`.claude-plugin/plugin.json`). The
-six skills run on Claude Code today against a real repo. Expect breaking changes while the
+seven skills run on Claude Code today against a real repo. Expect breaking changes while the
 config and skill shapes settle.
 
 ## Contributing
