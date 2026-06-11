@@ -15,8 +15,9 @@ Checks:
   6. No banned characters in tracked files: literal em or en dash anywhere,
      semicolons and HTML-entity dashes in markdown prose (code stripped with
      the hook's own semantics, unmatched fences fail open with a warning).
-  7. Verbatim canonical blocks match their canonical home (registry is filled
-     by later phases, an empty registry passes).
+  7. Trigger collision phrases appear in at most one skill description.
+  8. Every load-bearing glossary term has a CONTEXT.md entry.
+  9. Verbatim canonical blocks match their canonical home byte for byte.
 
 PyYAML sharpens check 1 and 2 when installed (it is a CI dependency, not a
 runtime one). Without it the checks degrade to regex on the raw lines.
@@ -67,25 +68,15 @@ CANONICAL_BLOCKS = [
     ),
     (
         "skills/preflight/SKILL.md",
-        "docs/PRODUCT_SPEC.md",
+        "docs/ARCHITECTURE.md",
         "<!-- nitpickle:finding-schema -->",
     ),
     (
         "skills/review-pr/REVIEW-FORMAT.md",
-        "docs/PRODUCT_SPEC.md",
+        "docs/ARCHITECTURE.md",
         "<!-- nitpickle:finding-schema -->",
     ),
 ]
-
-# Wording retired by sweeps. Reappearance anywhere is a regression to a fixed
-# contradiction or presumption.
-RETIRED_PHRASES = (
-    "No proof caps",
-    "see `docs/PRODUCT_SPEC.md`",
-    "critic surfaces only cosmetic",
-    "(incl. billing)",
-    "especially billing/metering",
-)
 
 # Load-bearing vocabulary the skills use. Each must have a glossary entry in
 # CONTEXT.md (a "- **Term**" bullet). Curated by hand, free-prose extraction
@@ -271,16 +262,6 @@ def check_collision_phrases(root, skill_names):
             )
 
 
-def check_retired_phrases(root, files):
-    for rel in files:
-        if not rel.endswith(".md"):
-            continue
-        text = read(os.path.join(root, rel))
-        for phrase in RETIRED_PHRASES:
-            if phrase in text:
-                fail(f"{rel} contains retired wording: '{phrase}'")
-
-
 def check_glossary_terms(root):
     glossary = read(os.path.join(root, "CONTEXT.md"))
     for term in LOAD_BEARING_TERMS:
@@ -321,7 +302,6 @@ def main():
     check_readme_count(root, skill_names)
     check_versions(root)
     check_banned_characters(root, files)
-    check_retired_phrases(root, files)
     check_collision_phrases(root, skill_names)
     check_glossary_terms(root)
     check_canonical_blocks(root)

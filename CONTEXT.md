@@ -36,7 +36,7 @@ convention in Matt Pocock's engineering skills.
 ## Review surfaces
 
 - **Pre-flight** - reviewing your own branch against its base *before* opening a
-  PR. NitPickle's first product surface (the wedge). Written Pre-flight for the
+  PR. The core skill the others compose around. Written Pre-flight for the
   concept, `preflight` as the skill name.
 - **PR review** - reviewing *someone else's* PR with the same proof engine
   pointed outward: verify the diff against its stated intent, proof-gated

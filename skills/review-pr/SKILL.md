@@ -17,9 +17,8 @@ posting protocol. This file is the process.
 ## Where this sits
 
 The proof engine (`/nitpickle:preflight`) turned outward.
-Uses the local `gh` CLI, so no GitHub App is needed. Reuses NitPickle's finding
-schema, proof-gated severity, `CONTEXT.md`/`docs/adr/` conventions, and trust
-zones.
+Uses the local `gh` CLI. Reuses NitPickle's finding schema, proof-gated
+severity, `CONTEXT.md`/`docs/adr/` conventions, and trust zones.
 
 ## Procedure
 

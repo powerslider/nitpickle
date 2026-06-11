@@ -10,7 +10,7 @@ patches, tests, and proves. Nothing important lands without your approval, and
 every claim comes with runnable evidence.
 
 NitPickle is **not** another "build me an app" tool. The market is full of those.
-The wedge here is **trust**: proof-backed findings, inspectable memory,
+The core idea is **trust**: proof-backed findings, inspectable memory,
 repo-specific guardrails, and an audit trail.
 
 NitPickle ships as a **Claude Code plugin**: seven skills, a house-style hook, and
@@ -93,9 +93,9 @@ Once installed, the skills are invoked as `/nitpickle:bootstrap`,
    `CLAUDE.md`. See [.nitpickle/README.md](.nitpickle/README.md) for what each
    file does.
 3. On your next branch, run `/nitpickle:preflight` before opening the PR. That's
-   the wedge. Everything else composes around it.
+   the core loop. Everything else composes around it.
 4. Track whether it changed your behavior in `.nitpickle/validation-log.md`. That
-   is the metric that decides if the approach is working (see ROADMAP).
+   is the metric that decides if the approach is working.
 
 ## The pipeline at a glance
 
@@ -228,7 +228,7 @@ Output: `docs/design/<slug>.md`.
 
 ### preflight - proof-driven self-review
 
-**When:** you're about to open a PR. The wedge skill. Run it on every branch.
+**When:** you're about to open a PR. The core skill. Run it on every branch.
 
 Reviews your branch against its base like a strict senior reviewer, runs your
 linters/tests as evidence, and **builds a runnable proof for each finding** in an

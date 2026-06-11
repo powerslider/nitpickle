@@ -8,8 +8,8 @@ human-editable. Diff and commit these like code. Nothing here is invisible.
 | File | Holds | Written by | Read by |
 | --- | --- | --- | --- |
 | `policy.yaml` | commands to run, judgment rules, generated files, diff budget, review defaults, proof gating | you | every skill |
-| `preferences.md` | your personal engineering taste and house writing style | you (mined from past reviews in Phase 1) | every skill |
-| `validation-log.md` | did pre-flight change your behavior (the Phase 0 metric) | preflight | you |
+| `preferences.md` | your personal engineering taste and house writing style | you | every skill |
+| `validation-log.md` | did pre-flight change your behavior (the metric) | preflight | you |
 | `todo.md` | findings you deferred during a review run | preflight, review-pr | you |
 
 `validation-log.md` and `todo.md` are per-developer working state: bootstrap

@@ -41,7 +41,7 @@ Read, if present (skip silently if absent):
   exactly.** If the subject needs a concept not yet named, name it in the spec
   and note it as a glossary candidate.
 - `docs/adr/` - decisions already made. **Reference them, don't re-litigate.**
-  Where the design embodies an ADR, cite it (`see ADR-0002`).
+  Where the design embodies an ADR, cite it (`see ADR-0001`).
 - `.nitpickle/preferences.md` / `policy.yaml` - apply taste. Respect the trust
   model when describing integration boundaries.
 

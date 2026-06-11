@@ -1,9 +1,8 @@
 # Engineering preferences
 
 Personal engineering taste, applied by NitPickle on every review. Flat,
-human-editable, git-tracked - diff and commit it like code. In Phase 1 these
-get mined from your past PR review comments and proposed back to you. Until
-then, edit by hand. Delete anything that doesn't reflect how you actually work.
+human-editable, git-tracked - diff and commit it like code. Edit by hand.
+Delete anything that doesn't reflect how you actually work.
 
 ## Writing style (all generated text: comments, plans, specs, reviews)
 
