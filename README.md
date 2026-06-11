@@ -219,7 +219,8 @@ This is NitPickle's realization of "plans before patches." Pairs with
 is easier to read, or before building something architecturally significant.
 
 Produces an expert-level spec: overview, components (roles/responsibilities),
-integration primitives, and key flows (incl. billing), all with Mermaid diagrams.
+integration primitives, and key flows (for example billing or metering when the
+system has them), all with Mermaid diagrams.
 Deliberately **avoids code references and implementation detail**. The goal is
 that a reader can predict *where in the code* a responsibility lives.
 
@@ -397,6 +398,9 @@ Contributions are welcome. A few house rules keep the project coherent.
 - **Commits use Conventional Commits** with a `resolves <issue_id>` and a
   `Signed-off-by: First Last (email)` footer. No AI or tooling attribution. See
   [.nitpickle/preferences.md](.nitpickle/preferences.md).
+- **Every release bumps the version** in both manifests (`make bump
+  VERSION=x.y.z`) and adds a [CHANGELOG.md](CHANGELOG.md) entry. The validator
+  fails CI when the two manifests disagree.
 - **Know the layout.** Skills are markdown under `skills/<name>/SKILL.md` (plus
   optional reference files). The hook lives in `hooks/`. Global config defaults
   live in `defaults/`. Keep the four conventions separate: glossary

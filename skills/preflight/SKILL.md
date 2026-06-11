@@ -3,7 +3,7 @@ name: preflight
 description: Proof-driven pre-flight self-review of the current git branch before opening a PR. Reviews the branch against its base the way a strict senior reviewer would, runs the repo's linters and tests, and attempts a runnable proof (failing test, reproduction, or concrete diff) for each finding. Severity is gated on proof - unproven findings are downgraded to nits, never hidden. Trigger when the user asks to pre-flight, self-review, pre-review, or "check my branch before I open the PR".
 ---
 
-# Pre-Flight: proof-driven self-review
+# Pre-flight: proof-driven self-review
 
 Review the current branch against its base and **prove every objection**. A
 finding without a runnable artifact is downgraded, not suppressed. You are the

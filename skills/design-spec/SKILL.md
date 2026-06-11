@@ -1,6 +1,6 @@
 ---
 name: design-spec
-description: Generate a clean, expert-level system design specification that acts as an architectural guide - overview, components, integration primitives, and key flows (incl. billing) - with Mermaid diagrams. Focuses on roles, responsibilities, and components. Avoids code references and implementation detail. Use when the user wants a system design document, architecture spec, design doc, or an architectural guide for a system or component to make its implementation easier to read.
+description: Generate a clean, expert-level system design specification that acts as an architectural guide - overview, components, integration primitives, and key flows (for example billing or metering when the system has them) - with Mermaid diagrams. Focuses on roles, responsibilities, and components. Avoids code references and implementation detail. Use when the user wants a system design document, architecture spec, design doc, or an architectural guide for a system or component to make its implementation easier to read.
 ---
 
 # Design spec - architectural guide generator
@@ -56,7 +56,8 @@ both, and when only one exists it applies unchanged.
 
 Explore the codebase (or the described/planned system) to extract the
 architecture - components, ownership, seams, external dependencies, the defining
-flows (especially billing/metering and integrations). Use the `Explore` agent
+flows (for example billing or metering when the system has them, and
+integrations). Use the `Explore` agent
 for breadth. You are reverse-engineering the *architecture*, not cataloguing
 code. Ignore implementation mechanics that won't appear in the spec.
 
@@ -80,7 +81,7 @@ Follow the section set in SPEC-FORMAT.md, adapting to the subject:
 2. **Components** - responsibility cards + a container/component diagram.
 3. **Integration primitives** - the seams, at contract/intent level + sequence
    diagrams for the handshakes that matter.
-4. **Key flows (incl. billing)** - end-to-end narratives + sequence diagrams,
+4. **Key flows** - end-to-end narratives + sequence diagrams,
    each with failure modes and where idempotency/consistency is enforced.
 5. **Cross-cutting concerns** - only the non-obvious architectural shape.
 6. **Glossary & decisions** - link `CONTEXT.md` terms and the ADRs it embodies.

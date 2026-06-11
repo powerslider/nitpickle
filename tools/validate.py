@@ -77,11 +77,25 @@ CANONICAL_BLOCKS = [
     ),
 ]
 
-# Wording retired by the severity-exception sweep. Reappearance anywhere is a
-# regression to the pre-exception contradiction.
+# Wording retired by sweeps. Reappearance anywhere is a regression to a fixed
+# contradiction or presumption.
 RETIRED_PHRASES = (
     "No proof caps",
     "see `docs/PRODUCT_SPEC.md`",
+    "critic surfaces only cosmetic",
+    "(incl. billing)",
+    "especially billing/metering",
+)
+
+# Load-bearing vocabulary the skills use. Each must have a glossary entry in
+# CONTEXT.md (a "- **Term**" bullet). Curated by hand, free-prose extraction
+# cannot work reliably.
+LOAD_BEARING_TERMS = (
+    "Finding", "Proof", "Proof-gated severity", "Feedback loop",
+    "Proof engine", "Proof surface", "Pre-flight", "PR review",
+    "Review packet", "Policy", "Preference", "Diff budget", "Trust zone",
+    "Seam", "Deep module", "Deletion test", "Design spec", "Feature plan",
+    "Convergence", "Plan gate", "AFK", "HITL",
 )
 
 # Trigger phrases that must appear in at most one skill description, so a
@@ -267,6 +281,13 @@ def check_retired_phrases(root, files):
                 fail(f"{rel} contains retired wording: '{phrase}'")
 
 
+def check_glossary_terms(root):
+    glossary = read(os.path.join(root, "CONTEXT.md"))
+    for term in LOAD_BEARING_TERMS:
+        if f"- **{term}**" not in glossary:
+            fail(f"CONTEXT.md has no glossary entry for the load-bearing term '{term}'")
+
+
 def check_canonical_blocks(root):
     for block_file, canonical_file, marker in CANONICAL_BLOCKS:
         pattern = re.compile(
@@ -302,6 +323,7 @@ def main():
     check_banned_characters(root, files)
     check_retired_phrases(root, files)
     check_collision_phrases(root, skill_names)
+    check_glossary_terms(root)
     check_canonical_blocks(root)
 
     for w in warnings:

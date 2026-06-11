@@ -75,14 +75,14 @@ and contract*, not schema:
 
 Use **sequence diagrams** for the handshakes that matter.
 
-### 4. Key flows (incl. billing)
+### 4. Key flows
 
-End-to-end narratives of the flows that define the system. Billing is the
-canonical one - metering/usage capture → rating/pricing → invoicing →
+End-to-end narratives of the flows that define the system: auth, provisioning,
+the core job/request lifecycle. When the system has billing or metering, treat
+it as a defining flow - metering/usage capture → rating/pricing → invoicing →
 payment/settlement → refunds/adjustments - described as a relay of
 responsibilities across components, naming where authority and money-state live
-at each hop. Include other defining flows (auth, provisioning, the core
-job/request lifecycle).
+at each hop.
 
 Each flow: a one-paragraph narrative + a **sequence diagram**, and a note on its
 failure modes and where idempotency/consistency is enforced.
@@ -112,7 +112,7 @@ Pick the diagram type to the question. Mix types across the doc.
     Billing -->|charges| PSP[[Payment Provider]]
   ```
 
-- **Flows (billing, integration handshakes)** → `sequenceDiagram`. Show the relay
+- **Flows (for example billing or integration handshakes)** → `sequenceDiagram`. Show the relay
   of responsibility. Annotate failure/idempotency with notes.
 
   ```mermaid

@@ -26,11 +26,18 @@ convention in Matt Pocock's engineering skills.
 - **Feedback loop** - a fast, deterministic, agent-runnable pass/fail signal for
   a specific question. Producing one is the core of both proof and diagnosis.
   The Proof engine is a feedback-loop builder.
+- **Proof engine** - the shared mechanic that builds a Feedback loop per
+  candidate Finding and grades severity by the resulting artifact. Pre-flight
+  points it inward, PR review outward.
+- **Proof surface** - where a change can be proven: the Seam a failing test or
+  reproduction lives at. Every Feature plan phase names one up front. A change
+  with no correct Proof surface is itself a Finding.
 
 ## Review surfaces
 
 - **Pre-flight** - reviewing your own branch against its base *before* opening a
-  PR. NitPickle's first product surface (the wedge).
+  PR. NitPickle's first product surface (the wedge). Written Pre-flight for the
+  concept, `preflight` as the skill name.
 - **PR review** - reviewing *someone else's* PR with the same proof engine
   pointed outward: verify the diff against its stated intent, proof-gated
   Findings, suggested author comments gated on human approval. The outward
@@ -56,6 +63,8 @@ convention in Matt Pocock's engineering skills.
 - **Preference** - the user's personal engineering taste, applied on every
   review. Distinct from Policy (per-repo) and from glossary and decisions. Lives
   in `.nitpickle/preferences.md`.
+- **Diff budget** - the soft size limit for one reviewable change, set in
+  Policy. Exceeding it prompts a split into vertical slices, never a block.
 - **Trust zone** - the trust level of an input: trusted (user commands, your own
   working tree's convention files), semi-trusted (existing source), untrusted
   (PR or issue text, dependency docs, CI logs, web). Untrusted input is data,
@@ -75,7 +84,8 @@ convention in Matt Pocock's engineering skills.
   judge abstraction Findings.
 - **Design spec** - an architectural guide for a system or component: overview,
   components (roles and responsibilities), integration primitives, and key flows
-  (incl. billing), with diagrams. Describes how the system *is*, in glossary
+  (for example billing or metering when the system has them), with diagrams.
+  Describes how the system *is*, in glossary
   terms, without code references, so the implementation is easier to read.
 
 ## Planning
@@ -86,7 +96,11 @@ convention in Matt Pocock's engineering skills.
   Upstream of the Plan gate.
 - **Convergence** - the stop condition for iterative refinement: refinements stop
   being *meaningful* (no change to a phase boundary, dependency, risk, approach,
-  or unknown). Reached when an independent critic surfaces only cosmetic edits.
+  or unknown). Reached when two consecutive independent critic passes surface
+  only cosmetic edits.
+- **AFK** - a phase mergeable without human judgment. The preferred phase type.
+- **HITL** - a phase that needs a human decision or review before it can land.
+  The opposite of AFK.
 - **Plan gate** - the grilling step that produces an approved plan before any
   patch is written. No code lands without passing it for non-trivial work. Often
   fed by a Feature plan.
