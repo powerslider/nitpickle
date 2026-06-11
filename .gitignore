@@ -1,3 +1,7 @@
 # Per-developer working state (telemetry and deferred findings)
 .nitpickle/validation-log.md
 .nitpickle/todo.md
+
+# Python test artifacts
+__pycache__/
+*.pyc

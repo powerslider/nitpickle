@@ -12,7 +12,7 @@
 # depends on whether NitPickle can prove it.
 
 version: 1
-language: go
+language: python
 
 # Domain language and decisions NitPickle reads and respects.
 # Glossary terms are used verbatim in Findings. Accepted ADRs are not re-litigated.
@@ -21,21 +21,17 @@ context:
   adr_dir: docs/adr
 
 # Deterministic checks. Output is ingested as evidence.
+# This repo is markdown skills plus python tooling, so the checks are the hook
+# test suite and the repo consistency validator.
 commands:
-  test: go test ./...
-  lint: golangci-lint run
-  vuln: govulncheck ./...
-  # build: go build ./...
+  test: make test
+  lint: make lint
 
 # Judgment rules. NitPickle proves each before flagging it blocking.
 rules:
-  # correctness and structure
-  - require_context_propagation        # service methods accept and honor ctx
-  - errors_wrapped_with_context        # wrap with %w, never drop upstream cause
-  - table_driven_tests_for_handlers    # handler tests are table-driven
-  - no_package_level_mutable_state     # no mutable globals
-  - test_for_each_error_path           # error and edge branches have coverage
-  - public_api_change_needs_migration_note
+  # structure
+  - skill_changes_keep_chain_consistent  # cross-skill references and handoffs stay mutual
+  - test_for_each_error_path             # error and edge branches have coverage
   # comments and prose (defined in .nitpickle/preferences.md)
   - comments_what_not_how              # comment intent or invariant, not how it works
   - no_package_comments_unless_asked   # skip package doc comments unless requested
@@ -46,10 +42,7 @@ rules:
   - commit_footer_resolves_and_signoff # footer: resolves <issue_id> + Signed-off-by from git config
 
 # Files NitPickle must never propose edits to.
-generated_files:
-  - "**/*.pb.go"
-  - "**/mock_*.go"
-  - "docs/swagger.*"
+generated_files: []
 
 # Optional. Paths whose contents must never be read back or echoed.
 # protected_paths:

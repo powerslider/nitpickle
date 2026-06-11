@@ -1,0 +1,29 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install CI dependencies
+        run: pip install pyyaml
+
+      - name: Hook tests
+        run: make test
+
+      - name: Repo consistency validator
+        run: make lint
+
+      - name: Plugin structure validation (advisory)
+        continue-on-error: true
+        run: npx --yes @anthropic-ai/claude-code plugin validate .
