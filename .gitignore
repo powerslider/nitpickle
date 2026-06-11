@@ -1,2 +1,3 @@
-# Per-developer behavioral telemetry, grows a line per pre-flight run
+# Per-developer working state (telemetry and deferred findings)
 .nitpickle/validation-log.md
+.nitpickle/todo.md

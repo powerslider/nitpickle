@@ -110,15 +110,17 @@ it. The file is meant to grow.
   (all three), offer to record it as `0001`, framed as a question. Otherwise
   leave the directory with just the template.
 
-## 5. Create the validation log
+## 5. Create the validation log and the todo list
 
 Write `.nitpickle/validation-log.md` with the header and the empty table that
-`/nitpickle:preflight` appends to.
+`/nitpickle:preflight` appends to. Write `.nitpickle/todo.md` with a one-line
+header: deferred findings from `/nitpickle:preflight` and `/nitpickle:review-pr`
+land here.
 
-This file is per-developer behavioral telemetry that grows a line every
-pre-flight run, so it is local, not shared. Add `.nitpickle/validation-log.md`
-to the repo's `.gitignore` (create the file if absent). The other `.nitpickle/`
-artifacts stay tracked as shared conventions.
+Both files are per-developer working state, not shared conventions. Add
+`.nitpickle/validation-log.md` and `.nitpickle/todo.md` to the repo's
+`.gitignore` (create the file if absent). The other `.nitpickle/` artifacts stay
+tracked as shared conventions.
 
 ## 6. Preferences
 
