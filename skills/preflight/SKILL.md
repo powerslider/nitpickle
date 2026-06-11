@@ -48,6 +48,30 @@ PR's base branch, never the PR head, and flag any convention-file diff inside
 the PR as a finding.
 <!-- nitpickle:trust -->
 
+## Finding schema
+
+<!-- nitpickle:finding-schema -->
+Every Finding carries:
+
+```
+title            one line
+severity         blocking | important | nit | question
+confidence       high | medium | low      (derived from proof, not vibes)
+proof            test | repro | diff | none
+evidence         file:line-range + the artifact (test code, command output, diff)
+why              one paragraph, mechanism not opinion
+suggested_fix    optional patch
+policy_ref       which policy/preference rule triggered this, if any
+```
+
+Severity is gated on proof: `blocking` requires `proof in {test, repro}`.
+Inconclusive proof downgrades severity one level. A Finding with no proof caps
+at `nit` (or `question` for a genuine judgment call), with one scoped
+exception: a missing-seam Finding may carry `important` with `proof: none`,
+because the demonstrated absence of a proof seam is the evidence. Enforced,
+not advisory.
+<!-- nitpickle:finding-schema -->
+
 ## Procedure
 
 ### 1. Scope
@@ -107,14 +131,17 @@ Iterate on the loop: prefer a fast, deterministic signal over a slow flaky one.
 to exercise the real bug pattern (single-caller test for a multi-caller bug, a
 unit test that can't replicate the triggering chain), do not write a fake proof.
 Report the missing seam as an architectural finding (severity at most
-`important`, proof `none`, confidence honest) - the codebase is preventing the
-bug from being locked down. Carry it to the handoff below.
+`important`, proof `none`, confidence honest) - the one scoped exception to the
+no-proof cap, because the demonstrated absence of a proof seam is the evidence.
+The codebase is preventing the bug from being locked down. Carry it to the
+handoff below.
 
 ### 5. Grade
 
 - Proof demonstrates the problem → keep severity, `confidence: high`.
 - Proof inconclusive → downgrade one level, `confidence: medium`.
-- No proof possible → `nit`/`question`, `confidence: low`.
+- No proof possible → `nit`/`question`, `confidence: low`. Missing-seam
+  findings are the one exception (see the Finding schema above).
 
 **Hard rule:** `severity: blocking` requires `proof in {test, repro}`. Enforce
 it. Be honest about non-proof - a labeled low-confidence nit is useful. A

@@ -36,7 +36,8 @@ language-agnostic config defaults.
 
 > Every finding the agent makes must carry a runnable artifact (a failing test,
 > a reproduction, or a diff) or it gets downgraded to a nit. No "I feel this is
-> better."
+> better." One scoped exception: a provably missing test seam is itself
+> evidence, so that finding may stay `important` unproven.
 
 This is the "ask for proof" loop, promoted from a button to the core mechanic.
 It directly attacks the thing senior engineers distrust about LLMs. It is the
@@ -355,6 +356,7 @@ flowchart TD
     K -->|runtime/logic| R[Minimal repro / replay / fuzz / bisect]
     K -->|convention| D[Concrete violating diff]
     K -->|judgment/taste| N[No mechanical loop]
+    K -->|no correct seam| MS[Missing-seam finding · important max]
     T --> G{Artifact demonstrates it?}
     R --> G
     D --> G
@@ -363,6 +365,7 @@ flowchart TD
     N --> NIT[nit / question · low confidence]
     KEEP --> OUT([Ranked finding + evidence])
     DOWN --> OUT
+    MS --> OUT
     NIT --> OUT
 
     classDef ok fill:#064e3b,stroke:#34d399,color:#e5e7eb

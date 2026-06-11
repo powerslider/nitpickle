@@ -65,7 +65,24 @@ CANONICAL_BLOCKS = [
         "skills/commit-msg/SKILL.md",
         "<!-- nitpickle:conventions-commit-msg -->",
     ),
+    (
+        "skills/preflight/SKILL.md",
+        "docs/PRODUCT_SPEC.md",
+        "<!-- nitpickle:finding-schema -->",
+    ),
+    (
+        "skills/review-pr/REVIEW-FORMAT.md",
+        "docs/PRODUCT_SPEC.md",
+        "<!-- nitpickle:finding-schema -->",
+    ),
 ]
+
+# Wording retired by the severity-exception sweep. Reappearance anywhere is a
+# regression to the pre-exception contradiction.
+RETIRED_PHRASES = (
+    "No proof caps",
+    "see `docs/PRODUCT_SPEC.md`",
+)
 
 failures = []
 warnings = []
@@ -218,6 +235,16 @@ def check_banned_characters(root, files):
                     fail(f"{rel} contains {entity} in markdown prose")
 
 
+def check_retired_phrases(root, files):
+    for rel in files:
+        if not rel.endswith(".md"):
+            continue
+        text = read(os.path.join(root, rel))
+        for phrase in RETIRED_PHRASES:
+            if phrase in text:
+                fail(f"{rel} contains retired wording: '{phrase}'")
+
+
 def check_canonical_blocks(root):
     for block_file, canonical_file, marker in CANONICAL_BLOCKS:
         pattern = re.compile(
@@ -251,6 +278,7 @@ def main():
     check_readme_count(root, skill_names)
     check_versions(root)
     check_banned_characters(root, files)
+    check_retired_phrases(root, files)
     check_canonical_blocks(root)
 
     for w in warnings:

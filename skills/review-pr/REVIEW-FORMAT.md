@@ -23,15 +23,31 @@ emphasized. All modes obey proof-gated severity.
 
 ## Finding schema
 
-Identical to the rest of NitPickle (see `docs/PRODUCT_SPEC.md`): `severity`
-(blocking | important | nit | question), `confidence` (high | medium | low),
-`proof` (test | repro | diff | none), `evidence` (file:line + artifact), `why`
-(mechanism not opinion), optional `suggested_fix`, `policy_ref`.
+<!-- nitpickle:finding-schema -->
+Every Finding carries:
 
-**Proof-gated severity holds for others' PRs too.** `blocking` requires a `test`
-or `repro` built in an isolated checkout of the PR branch. An unproven concern is
-downgraded to `nit`/`question`, never asserted as blocking. A finding that
-contradicts an accepted ADR is raised as a `question`, not a demand.
+```
+title            one line
+severity         blocking | important | nit | question
+confidence       high | medium | low      (derived from proof, not vibes)
+proof            test | repro | diff | none
+evidence         file:line-range + the artifact (test code, command output, diff)
+why              one paragraph, mechanism not opinion
+suggested_fix    optional patch
+policy_ref       which policy/preference rule triggered this, if any
+```
+
+Severity is gated on proof: `blocking` requires `proof in {test, repro}`.
+Inconclusive proof downgrades severity one level. A Finding with no proof caps
+at `nit` (or `question` for a genuine judgment call), with one scoped
+exception: a missing-seam Finding may carry `important` with `proof: none`,
+because the demonstrated absence of a proof seam is the evidence. Enforced,
+not advisory.
+<!-- nitpickle:finding-schema -->
+
+**Proof-gated severity holds for others' PRs too.** The proof is built in an
+isolated checkout of the PR branch. A finding that contradicts an accepted ADR
+is raised as a `question`, not a demand.
 
 Two PR-specific finding kinds beyond preflight:
 
