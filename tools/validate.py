@@ -47,9 +47,25 @@ NUMBER_WORDS = {
     7: "seven", 8: "eight", 9: "nine", 10: "ten", 11: "eleven", 12: "twelve",
 }
 
-# Filled by later phases: (block_file, canonical_file, marker) triples whose
-# marker-delimited content must match byte for byte.
-CANONICAL_BLOCKS = []
+# (block_file, canonical_file, marker) triples whose marker-delimited content
+# must match byte for byte. The canonical homes live in .nitpickle/README.md.
+# commit-msg carries a reduced variant registered against itself, which asserts
+# presence of the block without a second copy to compare.
+FULL_BLOCK_SKILLS = (
+    "bootstrap", "design-spec", "feature-plan", "grill", "preflight",
+    "review-pr",
+)
+CANONICAL_BLOCKS = [
+    (f"skills/{name}/SKILL.md", ".nitpickle/README.md", marker)
+    for name in FULL_BLOCK_SKILLS
+    for marker in ("<!-- nitpickle:resolution -->", "<!-- nitpickle:trust -->")
+] + [
+    (
+        "skills/commit-msg/SKILL.md",
+        "skills/commit-msg/SKILL.md",
+        "<!-- nitpickle:conventions-commit-msg -->",
+    ),
+]
 
 failures = []
 warnings = []
