@@ -11,7 +11,7 @@
       "name": "nitpickle",
       "source": "./",
       "description": "Proof-driven self-review and PR review, feature planning, plan grilling, design specs, commit messages, and convention-layer bootstrapping, with repo-specific guardrails.",
-      "version": "0.1.4",
+      "version": "0.1.5",
       "license": "MIT",
       "author": {
         "name": "Tsvetan Dimitrov"

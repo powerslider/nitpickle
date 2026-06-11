@@ -187,6 +187,12 @@ def check_skills(root):
                     f"skills/{d}/SKILL.md description contains an unquoted hash, "
                     f"YAML will truncate it (install pyyaml for the exact check)"
                 )
+            if raw_desc and not raw_desc.startswith(('"', "'")) and ": " in raw_desc:
+                fail(
+                    f"skills/{d}/SKILL.md description contains a colon-space in an "
+                    f"unquoted scalar, strict YAML rejects it (install pyyaml for "
+                    f"the exact check)"
+                )
         names.append(d)
     return names
 
