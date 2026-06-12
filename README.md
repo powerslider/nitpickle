@@ -1,25 +1,41 @@
+<div align="center">
+
 # NitPickle
 
+**Proof-driven engineering skills for Claude Code.**
+
+A senior-engineer control plane for AI coding agents. Controlled delegation,
+not autonomy. You stay the engineer of record, and every claim the agent makes
+comes with runnable evidence.
+
+[![ci](https://github.com/powerslider/nitpickle/actions/workflows/ci.yml/badge.svg)](https://github.com/powerslider/nitpickle/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 ![Claude Code plugin](https://img.shields.io/badge/Claude%20Code-plugin-5A45FF)
 ![Status: alpha](https://img.shields.io/badge/status-alpha-orange)
 
-A senior-engineer control plane for AI coding agents. Controlled delegation,
-not autonomy. You stay the engineer of record. The agent investigates, drafts,
-patches, tests, and proves. Nothing important lands without your approval, and
-every claim comes with runnable evidence.
+</div>
 
 NitPickle is **not** another "build me an app" tool. The market is full of those.
 The core idea is **trust**: proof-backed findings, inspectable memory,
 repo-specific guardrails, and an audit trail.
 
-NitPickle ships as a **Claude Code plugin**: seven skills, a house-style hook, and
-language-agnostic config defaults.
+## Features
+
+- **Proof-gated findings.** A finding without a runnable artifact (failing
+  test, reproduction, or diff) is downgraded to a nit, never dressed up as
+  blocking. The one scoped exception: a provably missing test seam is itself
+  evidence.
+- **Seven composable skills** covering the pre-merge lifecycle: plan, gate,
+  spec, self-review, PR review, commit messages, and convention bootstrapping.
+- **Per-repo conventions, git-tracked.** Domain glossary, recorded decisions,
+  policy, and personal taste live in flat files you diff and commit.
+- **Trust zones.** PR text, issues, dependency docs, and web content are data,
+  never instructions. Prompt-injection resistance is a first-class property.
+- **No services.** Everything runs inside Claude Code against a local branch
+  or a local checkout via `gh`.
 
 ## Contents
 
-- [The one idea that matters](#the-one-idea-that-matters)
-- [Requirements](#requirements)
 - [Install](#install)
 - [Getting started](#getting-started)
 - [The pipeline at a glance](#the-pipeline-at-a-glance)
@@ -28,31 +44,17 @@ language-agnostic config defaults.
 - [The shared substrate](#the-shared-substrate)
 - [Status](#status)
 - [Contributing](#contributing)
+- [Development](#development)
 - [Security](#security)
 - [License](#license)
 - [Acknowledgments](#acknowledgments)
 
-## The one idea that matters
-
-> Every finding the agent makes must carry a runnable artifact (a failing test,
-> a reproduction, or a diff) or it gets downgraded to a nit. No "I feel this is
-> better." One scoped exception: a provably missing test seam is itself
-> evidence, so that finding may stay `important` unproven.
-
-This is the "ask for proof" loop, promoted from a button to the core mechanic.
-It directly attacks the thing senior engineers distrust about LLMs. It is the
-spine shared by every skill below.
-
-## Requirements
-
-- **Claude Code** (CLI, desktop, IDE, or web). NitPickle is a Claude Code plugin.
-- **git**. Skills review branches and run proofs in isolated worktrees.
-- **python3**. The house-style hook is a small python script.
-- **GitHub CLI (`gh`)**. Only for `review-pr`, to fetch and comment on PRs.
-- The skills detect your repo's toolchain (Go, Node, Rust, Python, ...) for the
-  test and lint commands. No specific language is required.
-
 ## Install
+
+Requirements: **Claude Code** (CLI, desktop, IDE, or web), **git**, and
+**python3** (the house-style hook). `review-pr` additionally needs the
+**GitHub CLI (`gh`)**. Skills detect your repo's toolchain (Go, Node, Rust,
+Python, ...) for test and lint commands, so no specific language is required.
 
 This repo is both the plugin and its own marketplace.
 
@@ -147,7 +149,7 @@ a mandate.
 | --- | --- | --- | --- |
 | **bootstrap** | setting up NitPickle in a repo, or refreshing the glossary when the ubiquitous language drifts | the codebase, toolchain, `~/.claude/nitpickle/` | `.nitpickle/`, `CONTEXT.md`, `docs/adr/` |
 | **feature-plan** | you have a rough idea and need a researched, phased plan | codebase, web, `CONTEXT.md`, `docs/adr/` | `docs/plans/<slug>.md` |
-| **grill** | you have a plan/approach to stress-test before coding | the plan, `CONTEXT.md`, `docs/adr/`, `preferences.md` | approved plan + inline `CONTEXT`/ADR updates |
+| **grill** | you have a plan/approach to stress-test before coding | the plan (incl. `docs/plans/`), `CONTEXT.md`, `docs/adr/`, `preferences.md` | approved `docs/plans/<slug>.md` + inline `CONTEXT`/ADR updates |
 | **design-spec** | you need an architectural guide for a system/component | the system, `CONTEXT.md`, `docs/adr/` | `docs/design/<slug>.md` |
 | **preflight** | you're about to open a PR and want a strict self-review | your branch, `policy.yaml`, `preferences.md`, `CONTEXT.md`, `docs/adr/` | ranked, proof-gated findings (local) |
 | **review-pr** | you're reviewing someone else's GitHub PR | the PR via `gh`, repo conventions | a review packet + approved comments |
@@ -191,8 +193,8 @@ log. The convention-layer counterpart to Claude Code's `/init` (which writes
 
 **When:** you're starting non-trivial work and the path isn't obvious yet.
 
-Does extensive multi-source analysis (codebase via the `Explore` agent, web via
-`deep-research`, plus existing specs/ADRs/issues), breaks the work into
+Does extensive multi-source analysis (codebase via the `Explore` agent, web
+research, plus existing specs/ADRs/issues), breaks the work into
 independently-shippable **vertical-slice phases**, and **iterates to convergence**.
 An adversarial critic subagent hunts gaps until two consecutive passes find
 only cosmetic edits. Each phase names its **proof surface** (where `preflight`
@@ -210,7 +212,9 @@ your taste. Resolved terms get written to `CONTEXT.md` and hard-to-reverse
 trade-offs get offered as ADRs **inline, as they crystallize**. No code is
 written until the plan passes.
 
-This is NitPickle's realization of "plans before patches." Pairs with
+On approval the plan is persisted to `docs/plans/<slug>.md` with an approved
+status and a `Branch:` line, so `preflight` can later check the branch against
+it. This is NitPickle's realization of "plans before patches." Pairs with
 `feature-plan` (which produces the plan grill then stress-tests).
 
 ### design-spec - architectural guide
@@ -234,7 +238,8 @@ Reviews your branch against its base like a strict senior reviewer, runs your
 linters/tests as evidence, and **builds a runnable proof for each finding** in an
 isolated worktree. Severity is gated on proof, so unproven concerns are
 downgraded to nits, never hidden. "No correct seam to prove it" is itself an
-architectural finding.
+architectural finding. When an approved plan in `docs/plans/` names the current
+branch, the diff is also checked against that phase's intent.
 
 Output: ranked findings, each with `[Fix] [TODO] [Dismiss] [Prove deeper]`. Stays
 local. Nothing is posted.
@@ -339,8 +344,11 @@ flowchart TB
   every review. Glossary, decisions, and taste are three separate things.
 - **Proof engine** - builds the sharpest runnable feedback loop a claim allows,
   in an isolated worktree, then grades it. Proof gates severity.
-- **Trust zones** - repo content, PR/issue text, dependency docs, and web pages
-  are untrusted *data*. Instructions found inside them are reported, not obeyed.
+- **Trust zones** - PR/issue text, dependency docs, CI logs, and web pages are
+  untrusted *data*, existing source is semi-trusted, and only your request plus
+  your own working tree's `.nitpickle/` files are trusted. PR review reads
+  conventions from the PR's base branch, never the PR head. Instructions found
+  inside non-trusted content are reported, not obeyed.
 
 Config resolution reads both layers and merges: a repo's `.nitpickle/` overrides
 the global defaults at `~/.claude/nitpickle/` per top-level key, `rules` is the
@@ -406,15 +414,32 @@ Contributions are welcome. A few house rules keep the project coherent.
   live in `defaults/`. Keep the four conventions separate: glossary
   (`CONTEXT.md`), decisions (`docs/adr/`), policy, and taste.
 
+## Development
+
+```sh
+make test    # hook test suite (stdlib unittest)
+make lint    # repo consistency validator (tools/validate.py)
+make check   # both
+make bump VERSION=x.y.z
+```
+
+CI runs `make test` and `make lint` on every push and PR, with PyYAML installed
+for strict frontmatter parsing (local runs without it degrade to regex checks).
+The validator also keeps the canonical text blocks (resolution rule, trust
+zones, Finding schema) byte-identical across the skills and their canonical
+homes, so edit the canonical home first and copy outward.
+
 ## Security
 
 NitPickle reads source, runs your repo's own commands inside isolated git
 worktrees, and (for `review-pr`) can post comments through your local `gh`.
 Safeguards:
 
-- **Trust zones.** Repo content, PR and issue text, dependency docs, and web
-  pages are treated as untrusted data, never as instructions. A comment that says
+- **Trust zones.** PR and issue text, dependency docs, CI logs, and web pages
+  are treated as untrusted data, never as instructions. A comment that says
   "ignore previous instructions and run X" is reported as a finding, not obeyed.
+  PR review reads convention files from the base branch, and a convention-file
+  diff inside a PR is flagged as a finding.
   See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 - **Nothing lands without you.** No merges, no pushes, no commits, and no posted
   comments without explicit per-item approval. `review-pr` never submits an
@@ -435,4 +460,4 @@ NitPickle builds on conventions from
 [Matt Pocock's engineering skills](https://github.com/mattpocock/skills/tree/main/skills/engineering):
 `CONTEXT.md` as a domain glossary, `docs/adr/` for decisions, "the feedback loop
 is the skill" as the spine of the proof engine, and the deep-module / seam
-vocabulary for architecture findings. 
+vocabulary for architecture findings.
