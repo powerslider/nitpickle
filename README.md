@@ -25,8 +25,9 @@ repo-specific guardrails, and an audit trail.
   test, reproduction, or diff) is downgraded to a nit, never dressed up as
   blocking. The one scoped exception: a provably missing test seam is itself
   evidence.
-- **Seven composable skills** covering the pre-merge lifecycle: plan, gate,
-  spec, self-review, PR review, commit messages, and convention bootstrapping.
+- **Nine composable skills** covering the pre-merge lifecycle: plan, gate,
+  spec, self-review, PR review, commit messages, convention bootstrapping, and
+  handing off then resuming in-flight work.
 - **Per-repo conventions, git-tracked.** Domain glossary, recorded decisions,
   policy, and personal taste live in flat files you diff and commit.
 - **Trust zones.** PR text, issues, dependency docs, and web content are data,
@@ -81,8 +82,9 @@ Or enable it automatically in a repo via `.claude/settings.json`:
 
 Once installed, the skills are invoked as `/nitpickle:bootstrap`,
 `/nitpickle:preflight`, `/nitpickle:review-pr`, `/nitpickle:grill`,
-`/nitpickle:feature-plan`, `/nitpickle:design-spec`, and
-`/nitpickle:commit-msg`. The house-style hook activates automatically.
+`/nitpickle:feature-plan`, `/nitpickle:design-spec`, `/nitpickle:commit-msg`,
+`/nitpickle:handoff`, and `/nitpickle:resume`. The house-style hook activates
+automatically.
 
 ## Getting started
 
@@ -138,6 +140,10 @@ flowchart LR
 - `commit-msg` is a per-commit utility, usable at any point in the chain. It
   drafts the message for whatever is staged, in the format `preferences.md`
   defines.
+- `handoff` is a utility usable at any point. It captures the live progress of
+  in-flight work to a `docs/handoffs/<slug>.md` so a different session or agent
+  can pick it up. `resume` is its counterpart, loading that artifact and
+  verifying it against the real repo state before continuing.
 
 You don't have to use every stage. Small change? Skip straight to `preflight`.
 Just reviewing a teammate's PR? Jump to `review-pr`. The chain is a default, not
@@ -154,6 +160,8 @@ a mandate.
 | **preflight** | you're about to open a PR and want a strict self-review | your branch, `policy.yaml`, `preferences.md`, `CONTEXT.md`, `docs/adr/` | ranked, proof-gated findings (local) |
 | **review-pr** | you're reviewing someone else's GitHub PR | the PR via `gh`, repo conventions | a review packet + approved comments |
 | **commit-msg** | you need a commit message for the staged changes | the diff, `preferences.md` | a ready-to-copy conventional-commit message |
+| **handoff** | you are pausing in-flight work for another session or agent to finish | git state, `docs/plans/<slug>.md` | `docs/handoffs/<slug>.md` |
+| **resume** | you are picking up in-flight work from a handoff | `docs/handoffs/<slug>.md`, the linked plan, git + policy commands | the verified work continued from its next step |
 
 ### When to reach for which
 
@@ -168,6 +176,8 @@ flowchart TD
     Q -->|About to open a PR| PF[preflight]
     Q -->|Reviewing a teammate's PR| RV[review-pr]
     Q -->|Committing staged changes| CM[commit-msg]
+    Q -->|Pausing work for another session| HO[handoff]
+    Q -->|Picking up a paused task| RE[resume]
 
     FP --> GR
     GR --> code[/write code/]
@@ -175,7 +185,7 @@ flowchart TD
     PF --> open([open PR])
 
     classDef s fill:#1f2937,stroke:#60a5fa,color:#e5e7eb
-    class IN,FP,GR,DS,PF,RV,CM s
+    class IN,FP,GR,DS,PF,RV,CM,HO,RE s
 ```
 
 ### bootstrap - scaffold the convention layer
@@ -266,6 +276,34 @@ conventional-commit message in the exact format `preferences.md` defines:
 type, subject under 72 characters, a why-not-what bullet body, and the issue
 reference plus sign-off footer. Output only. It never stages, commits, or runs
 any git write command.
+
+### handoff - capture in-flight progress
+
+**When:** you are pausing work and want a different session, machine, or agent
+to finish it.
+
+Writes a `docs/handoffs/<slug>.md` capturing what is done, in flight, blocked,
+the next concrete step, ruled-out dead-ends, and a git snapshot with the
+uncommitted diff embedded (untracked files included). It links a matching
+`docs/plans/<slug>.md` rather than copying its phases. Unlike native session
+resume, the artifact is human-readable and readable by an agent that was never
+in this session. `/nitpickle:resume` reads it back. The handoff is ephemeral,
+and moving it to the other session is the author's call. Output only, it never
+commits. See [ADR-0002](docs/adr/0002-handoff-artifact-standalone-and-ephemeral.md).
+
+### resume - pick up an in-flight task
+
+**When:** you are continuing work a different session, machine, or agent paused.
+
+Loads `docs/handoffs/<slug>.md` and verifies it against reality before building
+on it: compares the recorded git snapshot to the real branch and head, applies
+the embedded diff and re-runs the policy commands rather than trusting the
+artifact's claims, and reconciles progress against the current plan. On real
+divergence (the diff fails to apply, the branch differs, or the commands fail)
+it reports each one and stops to ask, never silently building on a stale
+handoff. When the task is finalized it offers to delete the artifact. The
+artifact is semi-trusted data, it informs the work and never carries
+instructions.
 
 ## How a change flows through, end to end
 
@@ -390,7 +428,7 @@ review to `design-spec` / architecture work.
 ## Status
 
 Greenfield, packaged as a Claude Code plugin (`.claude-plugin/plugin.json`). The
-seven skills run on Claude Code today against a real repo. Expect breaking changes while the
+nine skills run on Claude Code today against a real repo. Expect breaking changes while the
 config and skill shapes settle.
 
 ## Contributing

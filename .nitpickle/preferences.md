@@ -10,6 +10,9 @@ Delete anything that doesn't reflect how you actually work.
 - Professional tone.
 - No em dashes and no semicolons anywhere. Use periods, commas, or separate
   sentences instead.
+- House style governs prose you author and intend to maintain. Code captured
+  from elsewhere that you do not intend to clean up (for example a diff embedded
+  in a handoff artifact) is out of scope and is not held to these rules.
 
 ## No attribution
 

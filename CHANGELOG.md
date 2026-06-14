@@ -4,6 +4,25 @@ One entry per released version. Bump the version in both
 `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json` for every
 release (`make bump VERSION=x.y.z`), and add the entry here.
 
+## 0.2.0
+
+- New `handoff` and `resume` skills, a pair for encapsulating the progress of
+  an in-flight task so a different session or agent can finish it. `handoff`
+  writes a standalone, ephemeral `docs/handoffs/<slug>.md` capturing what is
+  done, in flight, blocked, the next step, dead-ends, and a git snapshot with
+  the uncommitted diff embedded (untracked files included), linking a matching
+  plan rather than copying it. Getting the artifact to the other session is the
+  author's call. `resume` loads the artifact and verifies it against
+  reality (git snapshot, applies the embedded diff and re-runs the policy
+  commands, reconciles against the plan) before continuing, stopping to ask on
+  real divergence and offering to delete the artifact when the task is done.
+  See ADR-0002.
+- House style no longer polices captured code we do not author or maintain. The
+  hook and the validator exempt `docs/handoffs/` paths, so an embedded diff is
+  neither blocked on write nor failed in CI.
+- Glossary gains **Handoff**. The README skill-count check is now
+  case-insensitive and allows an adjective, so every count site is validated.
+
 ## 0.1.5
 
 - The repo is scoped to what it is, a Claude Code plugin of skills. One

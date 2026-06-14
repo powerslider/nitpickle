@@ -116,5 +116,23 @@ class TestInputHandling(unittest.TestCase):
         self.assertTrue(denied(result))
 
 
+class TestHandoffExemption(unittest.TestCase):
+    def test_handoff_artifact_allows_banned_characters(self):
+        content = "Captured diff with " + EM_DASH + " and a; semicolon"
+        result = run_hook(hook_input("docs/handoffs/sync-cache.md", content))
+        self.assertEqual(result.returncode, 0)
+        self.assertFalse(denied(result))
+
+    def test_handoff_exemption_holds_for_absolute_path(self):
+        content = "x = 1 " + EM_DASH + " note"
+        result = run_hook(hook_input("/repo/docs/handoffs/x.md", content))
+        self.assertFalse(denied(result))
+
+    def test_exemption_does_not_leak_to_sibling_paths(self):
+        content = "authored prose with " + EM_DASH + " dash"
+        result = run_hook(hook_input("docs/plans/x.md", content))
+        self.assertTrue(denied(result))
+
+
 if __name__ == "__main__":
     unittest.main()

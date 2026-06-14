@@ -63,6 +63,13 @@ def find_violations(path, text):
     return violations
 
 
+def is_exempt(path):
+    """Handoff artifacts capture diffs of code we do not author or maintain, so
+    house style does not apply to them. See .nitpickle/preferences.md."""
+    norm = path.replace("\\", "/")
+    return "docs/handoffs/" in norm
+
+
 def main():
     try:
         data = json.load(sys.stdin)
@@ -75,6 +82,8 @@ def main():
 
     tool_input = data.get("tool_input") or {}
     path = tool_input.get("file_path") or ""
+    if is_exempt(path):
+        sys.exit(0)
     text = incoming_text(tool_input)
     if not text:
         sys.exit(0)

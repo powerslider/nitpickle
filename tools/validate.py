@@ -53,8 +53,8 @@ NUMBER_WORDS = {
 # commit-msg carries a reduced variant registered against itself, which asserts
 # presence of the block without a second copy to compare.
 FULL_BLOCK_SKILLS = (
-    "bootstrap", "design-spec", "feature-plan", "grill", "preflight",
-    "review-pr",
+    "bootstrap", "design-spec", "feature-plan", "grill", "handoff",
+    "preflight", "resume", "review-pr",
 )
 CANONICAL_BLOCKS = [
     (f"skills/{name}/SKILL.md", ".nitpickle/README.md", marker)
@@ -86,7 +86,7 @@ LOAD_BEARING_TERMS = (
     "Proof engine", "Proof surface", "Pre-flight", "PR review",
     "Review packet", "Policy", "Preference", "Diff budget", "Trust zone",
     "Seam", "Deep module", "Deletion test", "Design spec", "Feature plan",
-    "Convergence", "Plan gate", "AFK", "HITL",
+    "Convergence", "Plan gate", "AFK", "HITL", "Handoff",
 )
 
 # Trigger phrases that must appear in at most one skill description, so a
@@ -210,9 +210,12 @@ def check_references(root, skill_names, files):
 def check_readme_count(root, skill_names):
     readme = read(os.path.join(root, "README.md"))
     expected = NUMBER_WORDS.get(len(skill_names), str(len(skill_names)))
-    found = re.findall(r"\b(" + "|".join(NUMBER_WORDS.values()) + r") skills\b", readme)
+    # Case-insensitive, with an optional adjective between the number word and
+    # "skills" so "Seven composable skills" is validated, not just "seven skills".
+    pattern = r"\b(" + "|".join(NUMBER_WORDS.values()) + r")(?: \w+)? skills\b"
+    found = re.findall(pattern, readme, re.IGNORECASE)
     for word in found:
-        if word != expected:
+        if word.lower() != expected:
             fail(
                 f"README says '{word} skills' but skills/ ships "
                 f"{len(skill_names)} ({expected})"
@@ -234,6 +237,10 @@ def check_versions(root):
 
 def check_banned_characters(root, files):
     for rel in files:
+        # Handoff artifacts embed diffs of code we do not author or maintain, so
+        # house style does not apply. See .nitpickle/preferences.md.
+        if rel.replace("\\", "/").startswith("docs/handoffs/"):
+            continue
         path = os.path.join(root, rel)
         try:
             text = read(path)

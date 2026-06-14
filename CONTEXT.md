@@ -54,6 +54,11 @@ convention in Matt Pocock's engineering skills.
 - **Run record** - a local, private record of what a review run did: modes,
   commands and tests run, proven count, approvals, risk rating. Kept for your own
   audit. Never posted, and outputs carry no tooling or authorship banner.
+- **Handoff** - a standalone, ephemeral artifact capturing the live progress of
+  an in-flight task (done, in flight, blocked, next step, ruled-out dead-ends,
+  and a git snapshot) so a different session or agent can pick it up. Distinct
+  from a Run record, which is a local review-run audit. Written by the handoff
+  skill, consumed by resume. See ADR-0002.
 
 ## Conventions
 
