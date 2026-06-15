@@ -54,7 +54,7 @@ NUMBER_WORDS = {
 # presence of the block without a second copy to compare.
 FULL_BLOCK_SKILLS = (
     "bootstrap", "design-spec", "feature-plan", "grill", "handoff",
-    "preflight", "resume", "review-pr",
+    "preflight", "resolve-conflicts", "resume", "review-pr",
 )
 CANONICAL_BLOCKS = [
     (f"skills/{name}/SKILL.md", ".nitpickle/README.md", marker)
@@ -86,7 +86,7 @@ LOAD_BEARING_TERMS = (
     "Proof engine", "Proof surface", "Pre-flight", "PR review",
     "Review packet", "Policy", "Preference", "Diff budget", "Trust zone",
     "Seam", "Deep module", "Deletion test", "Design spec", "Feature plan",
-    "Convergence", "Plan gate", "AFK", "HITL", "Handoff",
+    "Convergence", "Plan gate", "AFK", "HITL", "Handoff", "Conflict",
 )
 
 # Trigger phrases that must appear in at most one skill description, so a

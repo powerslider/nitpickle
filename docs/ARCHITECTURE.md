@@ -8,9 +8,10 @@ local branch or, for PR review, a local checkout via `gh`.
 ## Shape
 
 ```
-skills/*/SKILL.md            seven skills. preflight is the core, the others
+skills/*/SKILL.md            ten skills. preflight is the core, the others
                              compose around it (plan, gate, spec, PR review,
-                             commit messages, bootstrap)
+                             commit messages, bootstrap, handoff, resume,
+                             resolve-conflicts)
 hooks/                       house-style guard (PreToolUse)
 .nitpickle/                  policy (rules + commands), taste, per-developer
                              working state (validation log, todo)

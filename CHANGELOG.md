@@ -4,6 +4,28 @@ One entry per released version. Bump the version in both
 `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json` for every
 release (`make bump VERSION=x.y.z`), and add the entry here.
 
+## 0.3.0
+
+- New `resolve-conflicts` skill: proof-driven resolution of merge, rebase, and
+  cherry-pick conflicts. It detects the in-progress operation, reads each
+  conflict's base, mine, and incoming sides from the index, and maps ours and
+  theirs correctly (rebase swaps them, the usual source of wrong-side
+  resolutions). Each conflict is classified trivial, semantic, or file-level.
+- A provably-trivial hunk (a side-choice where the other side is a no-op, all
+  three stages present) is auto-resolved by a deterministic check, written
+  unstaged and logged. Union, append, adjacent edits, and every file-level
+  conflict (add/add, modify/delete, both-deleted, rename) are never trivial and
+  stay gated, so a deletion is never auto-taken.
+- A semantic resolution is proposed with whole-file context, proved by running
+  the policy commands, graded like a Finding, and applied only on per-hunk
+  approval. A green proof does not prove both sides' intent survived, so semantic
+  resolutions stay human-gated even when proven (ADR-0003). Binary and file-level
+  conflicts get a pick-a-side choice, never synthesized content.
+- All writes are unstaged and the skill never runs `--continue` or commits, so
+  the human finishes the operation. Single-file undo via `git checkout -m`.
+- Glossary gains **Conflict**. ADR-0003 records that proven resolutions stay
+  human-gated.
+
 ## 0.2.0
 
 - New `handoff` and `resume` skills, a pair for encapsulating the progress of

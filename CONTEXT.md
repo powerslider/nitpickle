@@ -54,6 +54,11 @@ convention in Matt Pocock's engineering skills.
 - **Run record** - a local, private record of what a review run did: modes,
   commands and tests run, proven count, approvals, risk rating. Kept for your own
   audit. Never posted, and outputs carry no tooling or authorship banner.
+- **Conflict** - a divergence git cannot merge on its own, surfaced during a
+  merge, rebase, or cherry-pick. A content conflict is a hunk where both sides
+  changed overlapping lines. A file-level conflict (modify/delete, rename,
+  both-deleted, binary) has no hunk. The unit `resolve-conflicts` works on, per
+  hunk for content and per path for file-level.
 - **Handoff** - a standalone, ephemeral artifact capturing the live progress of
   an in-flight task (done, in flight, blocked, next step, ruled-out dead-ends,
   and a git snapshot) so a different session or agent can pick it up. Distinct

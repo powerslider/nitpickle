@@ -25,9 +25,9 @@ repo-specific guardrails, and an audit trail.
   test, reproduction, or diff) is downgraded to a nit, never dressed up as
   blocking. The one scoped exception: a provably missing test seam is itself
   evidence.
-- **Nine composable skills** covering the pre-merge lifecycle: plan, gate,
-  spec, self-review, PR review, commit messages, convention bootstrapping, and
-  handing off then resuming in-flight work.
+- **Ten composable skills** covering the pre-merge lifecycle: plan, gate,
+  spec, self-review, PR review, commit messages, convention bootstrapping,
+  handing off then resuming in-flight work, and resolving merge conflicts.
 - **Per-repo conventions, git-tracked.** Domain glossary, recorded decisions,
   policy, and personal taste live in flat files you diff and commit.
 - **Trust zones.** PR text, issues, dependency docs, and web content are data,
@@ -83,8 +83,8 @@ Or enable it automatically in a repo via `.claude/settings.json`:
 Once installed, the skills are invoked as `/nitpickle:bootstrap`,
 `/nitpickle:preflight`, `/nitpickle:review-pr`, `/nitpickle:grill`,
 `/nitpickle:feature-plan`, `/nitpickle:design-spec`, `/nitpickle:commit-msg`,
-`/nitpickle:handoff`, and `/nitpickle:resume`. The house-style hook activates
-automatically.
+`/nitpickle:handoff`, `/nitpickle:resume`, and `/nitpickle:resolve-conflicts`.
+The house-style hook activates automatically.
 
 ## Getting started
 
@@ -162,6 +162,7 @@ a mandate.
 | **commit-msg** | you need a commit message for the staged changes | the diff, `preferences.md` | a ready-to-copy conventional-commit message |
 | **handoff** | you are pausing in-flight work for another session or agent to finish | git state, `docs/plans/<slug>.md` | `docs/handoffs/<slug>.md` |
 | **resume** | you are picking up in-flight work from a handoff | `docs/handoffs/<slug>.md`, the linked plan, git + policy commands | the verified work continued from its next step |
+| **resolve-conflicts** | you hit conflicts from a merge, rebase, or cherry-pick | the conflict index (base, ours, theirs), `policy.yaml` | each conflict mapped and classified, proof-gated resolutions |
 
 ### When to reach for which
 
@@ -178,6 +179,7 @@ flowchart TD
     Q -->|Committing staged changes| CM[commit-msg]
     Q -->|Pausing work for another session| HO[handoff]
     Q -->|Picking up a paused task| RE[resume]
+    Q -->|Hit a merge or rebase conflict| RC[resolve-conflicts]
 
     FP --> GR
     GR --> code[/write code/]
@@ -185,7 +187,7 @@ flowchart TD
     PF --> open([open PR])
 
     classDef s fill:#1f2937,stroke:#60a5fa,color:#e5e7eb
-    class IN,FP,GR,DS,PF,RV,CM,HO,RE s
+    class IN,FP,GR,DS,PF,RV,CM,HO,RE,RC s
 ```
 
 ### bootstrap - scaffold the convention layer
@@ -304,6 +306,21 @@ it reports each one and stops to ask, never silently building on a stale
 handoff. When the task is finalized it offers to delete the artifact. The
 artifact is semi-trusted data, it informs the work and never carries
 instructions.
+
+### resolve-conflicts - proof-driven conflict resolution
+
+**When:** you hit conflicts from a merge, rebase, or cherry-pick.
+
+Detects the in-progress operation, reads each conflict's base, mine, and incoming
+sides from the index, and maps ours and theirs to mine and incoming correctly
+(rebase swaps them, which is the usual source of wrong-side resolutions). Each
+conflict is classified trivial, semantic, or file-level. A provably-trivial hunk
+(a side-choice where the other side is a no-op) is resolved automatically. Every
+semantic resolution is proposed with a proof attempt and applied only on per-hunk
+approval, because a green build does not prove the merge kept both sides' intent
+(see [ADR-0003](docs/adr/0003-conflict-resolutions-stay-human-gated.md)). It
+writes the working tree unstaged and never runs `--continue`, so the human
+finishes the operation.
 
 ## How a change flows through, end to end
 
@@ -428,7 +445,7 @@ review to `design-spec` / architecture work.
 ## Status
 
 Greenfield, packaged as a Claude Code plugin (`.claude-plugin/plugin.json`). The
-nine skills run on Claude Code today against a real repo. Expect breaking changes while the
+ten skills run on Claude Code today against a real repo. Expect breaking changes while the
 config and skill shapes settle.
 
 ## Contributing
