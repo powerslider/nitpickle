@@ -4,6 +4,19 @@ One entry per released version. Bump the version in both
 `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json` for every
 release (`make bump VERSION=x.y.z`), and add the entry here.
 
+## 0.3.1
+
+- `review-pr` adversarially verifies each proven-blocking finding before it
+  enters the packet: a skeptic subagent tries to refute it (does the proof test
+  the real defect or an artifact?), and a refuted finding is downgraded or
+  dropped. Proof gates severity, this pass guards the proof, which matters more
+  on someone else's PR where a wrong request-for-changes is costly. Mirrors
+  feature-plan's critic.
+- The review packet is now written to `docs/reviews/pr-<n>.md`, a local,
+  gitignored, house-style-exempt file (it embeds proof evidence), in addition to
+  being presented for interactive triage. The hook and validator exempt
+  `docs/reviews/` the same way as `docs/handoffs/`.
+
 ## 0.3.0
 
 - New `resolve-conflicts` skill: proof-driven resolution of merge, rebase, and

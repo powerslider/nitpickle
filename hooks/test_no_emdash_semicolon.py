@@ -133,6 +133,12 @@ class TestHandoffExemption(unittest.TestCase):
         result = run_hook(hook_input("docs/plans/x.md", content))
         self.assertTrue(denied(result))
 
+    def test_review_packet_is_also_exempt(self):
+        content = "Evidence diff with " + EM_DASH + " and a; semicolon"
+        result = run_hook(hook_input("docs/reviews/pr-42.md", content))
+        self.assertEqual(result.returncode, 0)
+        self.assertFalse(denied(result))
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -57,9 +57,18 @@ Two PR-specific finding kinds beyond preflight:
 - **Compatibility/migration gap** - public surface or data shape changed without
   a migration note or rollback path.
 
+## Adversarial verification
+
+Before a `blocking` finding enters the packet, a skeptic subagent tries to refute
+it (is the proof testing the real defect, or an artifact?). A refuted finding is
+downgraded or dropped. Proof gates severity, this pass guards the proof against a
+green-but-wrong result, which is costly on someone else's PR.
+
 ## Review packet
 
-What the agent presents to the human before anything is posted:
+The packet is written to `docs/reviews/pr-<n>.md` (local, gitignored, exempt from
+house style because it embeds proof evidence) and presented to the human. What it
+contains, before anything is posted:
 
 ```
 PR #<n>: <title>   by <author>

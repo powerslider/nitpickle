@@ -237,9 +237,11 @@ def check_versions(root):
 
 def check_banned_characters(root, files):
     for rel in files:
-        # Handoff artifacts embed diffs of code we do not author or maintain, so
-        # house style does not apply. See .nitpickle/preferences.md.
-        if rel.replace("\\", "/").startswith("docs/handoffs/"):
+        # Transient artifacts (handoffs, review packets) embed captured code we
+        # do not author or maintain, so house style does not apply to them.
+        # See .nitpickle/preferences.md.
+        norm = rel.replace("\\", "/")
+        if norm.startswith("docs/handoffs/") or norm.startswith("docs/reviews/"):
             continue
         path = os.path.join(root, rel)
         try:

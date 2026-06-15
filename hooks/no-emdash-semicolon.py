@@ -63,11 +63,14 @@ def find_violations(path, text):
     return violations
 
 
+# Transient artifacts that embed captured code (diffs, proof evidence) we do not
+# author or maintain. House style does not apply. See .nitpickle/preferences.md.
+EXEMPT_DIRS = ("docs/handoffs/", "docs/reviews/")
+
+
 def is_exempt(path):
-    """Handoff artifacts capture diffs of code we do not author or maintain, so
-    house style does not apply to them. See .nitpickle/preferences.md."""
     norm = path.replace("\\", "/")
-    return "docs/handoffs/" in norm
+    return any(d in norm for d in EXEMPT_DIRS)
 
 
 def main():

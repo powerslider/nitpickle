@@ -2,6 +2,9 @@
 .nitpickle/validation-log.md
 .nitpickle/todo.md
 
+# Local review packets (transient, embed proof evidence, never a convention)
+docs/reviews/
+
 # Python test artifacts
 __pycache__/
 *.pyc

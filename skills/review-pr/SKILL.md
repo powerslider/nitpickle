@@ -95,7 +95,20 @@ Plus the PR-specific checks (REVIEW-FORMAT.md):
 - **Compatibility/migration** - public surface or data shape changed without a
   migration note or rollback path?
 
-### 6. Assemble the review packet
+### 6. Adversarially verify each proven-blocking finding
+
+Before a `blocking` finding enters the packet, try to **refute** it. Spawn a
+fresh subagent as a skeptic, prompted to assume the finding is a false positive
+and to check that the proof tests the real defect, not an artifact (a tautological
+test, a repro that depends on unrelated state, a diff that misreads the code).
+Default to refuted when the skeptic is uncertain. If it refutes, downgrade the
+finding or drop it.
+
+This mirrors `/nitpickle:feature-plan`'s critic and matters more here: a wrong
+`request changes` on someone else's PR is socially costly, so a green-but-wrong
+proof must not reach the packet. Proof gates severity, this pass guards the proof.
+
+### 7. Assemble the review packet
 
 Build the packet per REVIEW-FORMAT.md: executive summary, risk classification,
 **mechanical approval recommendation** (proven blocking ⇒ request changes. Only
@@ -103,13 +116,19 @@ unproven/important ⇒ comment. Nothing above nit ⇒ approve), intent check, an
 ranked findings - each with a suggested, collaborative author comment tied to its
 evidence.
 
-### 7. Triage with the human (investigation vs authority)
+Write the packet to `docs/reviews/pr-<n>.md` (derive the name from the PR number,
+or a slug when there is none). That path is local, gitignored, and exempt from
+house style, since the packet embeds proof evidence (diffs, command output) that
+is captured, not authored. The file is the durable, shareable artifact. Tell the
+user the path.
+
+### 8. Triage with the human (investigation vs authority)
 
 Present the packet. For each finding/comment the human chooses: **Post / Edit /
 Dismiss / Convert to task / Ask for proof**. Nothing is posted until they decide.
 Offer comment variants (firmer / shorter / concede) on request.
 
-### 8. Post only what's approved
+### 9. Post only what's approved
 
 Per the posting protocol (REVIEW-FORMAT.md):
 

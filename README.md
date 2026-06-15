@@ -158,7 +158,7 @@ a mandate.
 | **grill** | you have a plan/approach to stress-test before coding | the plan (incl. `docs/plans/`), `CONTEXT.md`, `docs/adr/`, `preferences.md` | approved `docs/plans/<slug>.md` + inline `CONTEXT`/ADR updates |
 | **design-spec** | you need an architectural guide for a system/component | the system, `CONTEXT.md`, `docs/adr/` | `docs/design/<slug>.md` |
 | **preflight** | you're about to open a PR and want a strict self-review | your branch, `policy.yaml`, `preferences.md`, `CONTEXT.md`, `docs/adr/` | ranked, proof-gated findings (local) |
-| **review-pr** | you're reviewing someone else's GitHub PR | the PR via `gh`, repo conventions | a review packet + approved comments |
+| **review-pr** | you're reviewing someone else's GitHub PR | the PR via `gh`, repo conventions | `docs/reviews/pr-<n>.md` packet + approved comments |
 | **commit-msg** | you need a commit message for the staged changes | the diff, `preferences.md` | a ready-to-copy conventional-commit message |
 | **handoff** | you are pausing in-flight work for another session or agent to finish | git state, `docs/plans/<slug>.md` | `docs/handoffs/<slug>.md` |
 | **resume** | you are picking up in-flight work from a handoff | `docs/handoffs/<slug>.md`, the linked plan, git + policy commands | the verified work continued from its next step |
@@ -263,11 +263,13 @@ local. Nothing is posted.
 The same proof engine as `preflight`, pointed outward. Fetches the PR via `gh`,
 **verifies the diff against its stated intent** (the PR description is a claim to
 check, not truth), runs proof-gated findings in an isolated checkout, and
-produces a **review packet** (summary, risk, approval recommendation, ranked
-findings, suggested author comments). Separates **investigation from authority**:
-you choose `Post / Edit / Dismiss / Convert to task / Ask for proof` per item.
-Nothing posts without approval. It never submits an Approve review unless you
-explicitly say so.
+**adversarially verifies each proven-blocking finding** (a skeptic subagent tries
+to refute it) so a green-but-wrong proof does not cost a teammate a wrong request
+for changes. It produces a **review packet** (summary, risk, approval
+recommendation, ranked findings, suggested author comments), written to a local
+`docs/reviews/pr-<n>.md`. Separates **investigation from authority**: you choose
+`Post / Edit / Dismiss / Convert to task / Ask for proof` per item. Nothing posts
+without approval. It never submits an Approve review unless you explicitly say so.
 
 ### commit-msg - draft the commit message
 
