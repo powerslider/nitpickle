@@ -54,7 +54,7 @@ NUMBER_WORDS = {
 # presence of the block without a second copy to compare.
 FULL_BLOCK_SKILLS = (
     "bootstrap", "design-spec", "feature-plan", "grill", "handoff",
-    "preflight", "resolve-conflicts", "resume", "review-pr",
+    "preflight", "polish", "resolve-conflicts", "resume", "review-pr",
 )
 CANONICAL_BLOCKS = [
     (f"skills/{name}/SKILL.md", ".nitpickle/README.md", marker)
@@ -82,7 +82,7 @@ CANONICAL_BLOCKS = [
 # CONTEXT.md (a "- **Term**" bullet). Curated by hand, free-prose extraction
 # cannot work reliably.
 LOAD_BEARING_TERMS = (
-    "Finding", "Proof", "Proof-gated severity", "Feedback loop",
+    "Finding", "Refinement", "Proof", "Proof-gated severity", "Feedback loop",
     "Proof engine", "Proof surface", "Pre-flight", "PR review",
     "Review packet", "Policy", "Preference", "Diff budget", "Trust zone",
     "Seam", "Deep module", "Deletion test", "Design spec", "Feature plan",

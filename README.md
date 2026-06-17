@@ -25,9 +25,10 @@ repo-specific guardrails, and an audit trail.
   test, reproduction, or diff) is downgraded to a nit, never dressed up as
   blocking. The one scoped exception: a provably missing test seam is itself
   evidence.
-- **Ten composable skills** covering the pre-merge lifecycle: plan, gate,
-  spec, self-review, PR review, commit messages, convention bootstrapping,
-  handing off then resuming in-flight work, and resolving merge conflicts.
+- **Eleven composable skills** covering the pre-merge lifecycle: plan, gate,
+  spec, self-review, PR review, quality polishing, commit messages, convention
+  bootstrapping, handing off then resuming in-flight work, and resolving merge
+  conflicts.
 - **Per-repo conventions, git-tracked.** Domain glossary, recorded decisions,
   policy, and personal taste live in flat files you diff and commit.
 - **Trust zones.** PR text, issues, dependency docs, and web content are data,
@@ -82,9 +83,9 @@ Or enable it automatically in a repo via `.claude/settings.json`:
 
 Once installed, the skills are invoked as `/nitpickle:bootstrap`,
 `/nitpickle:preflight`, `/nitpickle:review-pr`, `/nitpickle:grill`,
-`/nitpickle:feature-plan`, `/nitpickle:design-spec`, `/nitpickle:commit-msg`,
-`/nitpickle:handoff`, `/nitpickle:resume`, and `/nitpickle:resolve-conflicts`.
-The house-style hook activates automatically.
+`/nitpickle:feature-plan`, `/nitpickle:design-spec`, `/nitpickle:polish`,
+`/nitpickle:commit-msg`, `/nitpickle:handoff`, `/nitpickle:resume`, and
+`/nitpickle:resolve-conflicts`. The house-style hook activates automatically.
 
 ## Getting started
 
@@ -116,6 +117,7 @@ flowchart LR
     FP -.->|architecture heavy| DS[design-spec]
     DS -.-> GR
     IMPL --> PF[preflight]
+    PF -.->|quality pass| PL[polish]
     PF -->|ready| PR([Open PR])
     CM[commit-msg] -.->|drafts the message| PR
     PR --> RV[review-pr]
@@ -123,7 +125,7 @@ flowchart LR
 
     classDef skill fill:#1f2937,stroke:#60a5fa,color:#e5e7eb
     classDef gate fill:#374151,stroke:#34d399,color:#e5e7eb
-    class FP,DS,PF,RV,BST,CM skill
+    class FP,DS,PF,RV,BST,CM,PL skill
     class GR gate
 ```
 
@@ -159,6 +161,7 @@ a mandate.
 | **design-spec** | you need an architectural guide for a system/component | the system, `CONTEXT.md`, `docs/adr/` | `docs/design/<slug>.md` |
 | **preflight** | you're about to open a PR and want a strict self-review | your branch, `policy.yaml`, `preferences.md`, `CONTEXT.md`, `docs/adr/` | ranked, proof-gated findings (local) |
 | **review-pr** | you're reviewing someone else's GitHub PR | the PR via `gh`, repo conventions | `docs/reviews/pr-<n>.md` packet + approved comments |
+| **polish** | you want to improve the quality of code you wrote, refactoring toward the repo's idioms | the target (working tree or a path), `preferences.md`, `CONTEXT.md`, `docs/adr/`, `policy.yaml` | proven behavior-preserving Refinements, applied on approval (local) |
 | **commit-msg** | you need a commit message for the staged changes | the diff, `preferences.md` | a ready-to-copy conventional-commit message |
 | **handoff** | you are pausing in-flight work for another session or agent to finish | git state, `docs/plans/<slug>.md` | `docs/handoffs/<slug>.md` |
 | **resume** | you are picking up in-flight work from a handoff | `docs/handoffs/<slug>.md`, the linked plan, git + policy commands | the verified work continued from its next step |
@@ -176,6 +179,7 @@ flowchart TD
     Q -->|Need to explain a system| DS[design-spec]
     Q -->|About to open a PR| PF[preflight]
     Q -->|Reviewing a teammate's PR| RV[review-pr]
+    Q -->|Improving the quality of code you wrote| PL[polish]
     Q -->|Committing staged changes| CM[commit-msg]
     Q -->|Pausing work for another session| HO[handoff]
     Q -->|Picking up a paused task| RE[resume]
@@ -187,7 +191,7 @@ flowchart TD
     PF --> open([open PR])
 
     classDef s fill:#1f2937,stroke:#60a5fa,color:#e5e7eb
-    class IN,FP,GR,DS,PF,RV,CM,HO,RE,RC s
+    class IN,FP,GR,DS,PF,RV,PL,CM,HO,RE,RC s
 ```
 
 ### bootstrap - scaffold the convention layer
@@ -270,6 +274,24 @@ recommendation, ranked findings, suggested author comments), written to a local
 `docs/reviews/pr-<n>.md`. Separates **investigation from authority**: you choose
 `Post / Edit / Dismiss / Convert to task / Ask for proof` per item. Nothing posts
 without approval. It never submits an Approve review unless you explicitly say so.
+
+### polish - convention-aware quality improvement
+
+**When:** you want to improve the quality of code you just wrote, refactoring it
+toward the repo's idioms and taste.
+
+The inverse of `preflight`: where preflight reviews and proves defects, polish
+transforms and proves preservation. It reads the same convention layer (glossary,
+preferences, ADRs, policy) that generic cleanup tools cannot see, and proposes
+each change as a **Refinement**: a structural transform (reuse, altitude judged by
+the deletion test, dead code) carrying a **behavior-preservation proof** built in
+an isolated worktree. The proof is tiered, the policy commands when they cover the
+code, else a synthesized throwaway characterization test, else the Refinement is
+downgraded to a suggestion. A green proof shows the change is safe, never that it
+is better, so every Refinement is applied to the working tree only on per-change
+approval (see [ADR-0005](docs/adr/0005-polish-proves-preservation-not-betterment.md)).
+Quality only, it never hunts bugs or flags convention violations, those stay
+`preflight`'s. It never commits or pushes.
 
 ### commit-msg - draft the commit message
 
@@ -447,7 +469,7 @@ review to `design-spec` / architecture work.
 ## Status
 
 Greenfield, packaged as a Claude Code plugin (`.claude-plugin/plugin.json`). The
-ten skills run on Claude Code today against a real repo. Expect breaking changes while the
+eleven skills run on Claude Code today against a real repo. Expect breaking changes while the
 config and skill shapes settle.
 
 ## Contributing

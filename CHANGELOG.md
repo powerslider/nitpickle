@@ -4,6 +4,21 @@ One entry per released version. Bump the version in both
 `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json` for every
 release (`make bump VERSION=x.y.z`), and add the entry here.
 
+## 0.5.0
+
+- New `polish` skill: a convention-aware code-quality pass, the inverse of
+  `preflight`. It refactors a target toward the repo's idioms and taste (glossary,
+  preferences, ADRs, policy) that generic tools cannot see, proposes each change as
+  a Refinement, and applies it only on per-change approval, never in bulk. Quality
+  only, it does not hunt bugs.
+- The preservation proof is tiered (ADR-0005): the policy commands when they cover
+  the touched code, else a synthesized throwaway characterization test, else the
+  Refinement is downgraded and the missing seam flagged. A green proof shows the
+  change is safe, not better, so polish stays human-gated and never commits.
+- Glossary gains **Refinement**, Run record broadened to cover transform runs.
+  ADR-0005 records that polish proves preservation, not betterment, the ADR-0003
+  parallel for quality transforms.
+
 ## 0.4.0
 
 - New default-on write-command guardrail (`no-agent-writes.py`, ADR-0004). A

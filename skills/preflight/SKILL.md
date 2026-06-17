@@ -186,9 +186,11 @@ without explicit approval of the specific change.
 Ask the prevention question: **what would have prevented this class of
 finding?** If the answer is architectural - a missing seam, tangled callers, a
 shallow module hiding the bug - state it once, using the deletion-test and
-deep-module vocabulary, and offer to continue in an architecture-improvement
-pass. Make this recommendation *after* the findings are in, not before. Don't
-manufacture an architecture finding when the answer is just "write the test."
+deep-module vocabulary, and offer to continue in a quality-improvement pass with
+`/nitpickle:polish`, which transforms toward the repo's idioms and proves behavior
+preservation. Make this recommendation *after* the findings are in, not before.
+Don't manufacture an architecture finding when the answer is just "write the
+test."
 
 ## After the run - log the metric
 
