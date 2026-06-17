@@ -4,6 +4,21 @@ One entry per released version. Bump the version in both
 `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json` for every
 release (`make bump VERSION=x.y.z`), and add the entry here.
 
+## 0.4.0
+
+- New default-on write-command guardrail (`no-agent-writes.py`, ADR-0004). A
+  PreToolUse hook denies the writes that land or go outward (git commit, push,
+  reset `--hard`, merge/rebase/cherry-pick, and the destructive gh verbs), so
+  the human-decides-what-lands posture is enforced, not just asserted. Read
+  siblings and the skills' own worktree, checkout, and posting paths pass.
+  `NITPICKLE_ALLOW_WRITES` overrides it and is not a self-grant vector. The
+  matcher fires on a prefix, so an exact-subcommand check keeps `git merge-base`
+  and friends allowed.
+- The house-style hook now bans semicolons in code-comment prose, not only
+  markdown, closing the gap behind the stated policy. Code examples stay exempt
+  (fenced, inline, godoc-indented, `@example`), so Rust doctests pass. The
+  em-dash ban stays global.
+
 ## 0.3.1
 
 - `review-pr` adversarially verifies each proven-blocking finding before it
