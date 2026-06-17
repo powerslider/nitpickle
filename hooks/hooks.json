@@ -10,6 +10,71 @@
             "statusMessage": "Checking house style (no em dashes or semicolons)"
           }
         ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "if": "Bash(git commit:*)",
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/no-agent-writes.py\" git-commit",
+            "statusMessage": "Guardrail: write commands are the human's (ADR-0004)"
+          },
+          {
+            "type": "command",
+            "if": "Bash(git push:*)",
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/no-agent-writes.py\" git-push",
+            "statusMessage": "Guardrail: write commands are the human's (ADR-0004)"
+          },
+          {
+            "type": "command",
+            "if": "Bash(git reset:*)",
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/no-agent-writes.py\" git-reset",
+            "statusMessage": "Guardrail: write commands are the human's (ADR-0004)"
+          },
+          {
+            "type": "command",
+            "if": "Bash(git merge:*)",
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/no-agent-writes.py\" git-merge",
+            "statusMessage": "Guardrail: write commands are the human's (ADR-0004)"
+          },
+          {
+            "type": "command",
+            "if": "Bash(git rebase:*)",
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/no-agent-writes.py\" git-rebase",
+            "statusMessage": "Guardrail: write commands are the human's (ADR-0004)"
+          },
+          {
+            "type": "command",
+            "if": "Bash(git cherry-pick:*)",
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/no-agent-writes.py\" git-cherry-pick",
+            "statusMessage": "Guardrail: write commands are the human's (ADR-0004)"
+          },
+          {
+            "type": "command",
+            "if": "Bash(gh pr:*)",
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/no-agent-writes.py\" gh-pr",
+            "statusMessage": "Guardrail: write commands are the human's (ADR-0004)"
+          },
+          {
+            "type": "command",
+            "if": "Bash(gh repo:*)",
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/no-agent-writes.py\" gh-repo",
+            "statusMessage": "Guardrail: write commands are the human's (ADR-0004)"
+          },
+          {
+            "type": "command",
+            "if": "Bash(gh release:*)",
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/no-agent-writes.py\" gh-release",
+            "statusMessage": "Guardrail: write commands are the human's (ADR-0004)"
+          },
+          {
+            "type": "command",
+            "if": "Bash(gh issue:*)",
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/no-agent-writes.py\" gh-issue",
+            "statusMessage": "Guardrail: write commands are the human's (ADR-0004)"
+          }
+        ]
       }
     ]
   }

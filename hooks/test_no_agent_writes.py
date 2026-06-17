@@ -1,0 +1,177 @@
+"""Tests for the write-command guardrail. Stdlib only, run with:
+
+    python3 -m unittest discover -s hooks -p "test_*.py"
+
+The harness fires the hook per family (the hooks.json `if` condition). These
+tests invoke the script directly with the family arg and a crafted command, so
+they exercise the real allow/deny decision, including flag-order variants. The
+only untested layer is the harness firing, which is the platform's `if` matcher.
+"""
+import json
+import os
+import subprocess
+import sys
+import unittest
+
+HOOK = os.path.join(os.path.dirname(__file__), "no-agent-writes.py")
+
+
+def run(family, command, env=None):
+    full_env = dict(os.environ)
+    full_env.pop("NITPICKLE_ALLOW_WRITES", None)
+    if env:
+        full_env.update(env)
+    return subprocess.run(
+        [sys.executable, HOOK, family],
+        input=json.dumps({"tool_input": {"command": command}}),
+        capture_output=True,
+        text=True,
+        env=full_env,
+    )
+
+
+def denied(result):
+    if not result.stdout.strip():
+        return False
+    return json.loads(result.stdout)["hookSpecificOutput"]["permissionDecision"] == "deny"
+
+
+class TestUnconditional(unittest.TestCase):
+    def test_git_commit_denied(self):
+        self.assertTrue(denied(run("git-commit", "git commit -m fix")))
+
+    def test_git_push_denied(self):
+        self.assertTrue(denied(run("git-push", "git push origin main")))
+
+    def test_git_push_force_denied(self):
+        self.assertTrue(denied(run("git-push", "git push --force-with-lease")))
+
+    def test_git_push_in_a_chain_denied(self):
+        # The harness fires on the matched subcommand and passes the full command.
+        self.assertTrue(denied(run("git-push", "make test && git push")))
+
+
+class TestTokenDiscriminated(unittest.TestCase):
+    def test_git_reset_hard_denied(self):
+        self.assertTrue(denied(run("git-reset", "git reset --hard HEAD~1")))
+
+    def test_git_reset_soft_allowed(self):
+        self.assertFalse(denied(run("git-reset", "git reset --soft HEAD~1")))
+
+    def test_git_reset_unstage_allowed(self):
+        self.assertFalse(denied(run("git-reset", "git reset path.py")))
+
+    def test_merge_continue_denied(self):
+        self.assertTrue(denied(run("git-merge", "git merge --continue")))
+
+    def test_merge_initiate_denied(self):
+        self.assertTrue(denied(run("git-merge", "git merge feature")))
+
+    def test_merge_abort_allowed(self):
+        self.assertFalse(denied(run("git-merge", "git merge --abort")))
+
+    def test_rebase_continue_denied(self):
+        self.assertTrue(denied(run("git-rebase", "git rebase --continue")))
+
+    def test_rebase_abort_allowed(self):
+        self.assertFalse(denied(run("git-rebase", "git rebase --abort")))
+
+    def test_cherry_pick_continue_denied(self):
+        self.assertTrue(denied(run("git-cherry-pick", "git cherry-pick --continue")))
+
+    def test_merge_with_global_dir_flag_denied(self):
+        self.assertTrue(denied(run("git-merge", "git -C repo merge feature")))
+
+
+class TestReadOnlySiblings(unittest.TestCase):
+    """The harness `if` matcher fires on a string prefix, so read-only siblings
+    that share it (git merge-base, git commit-graph) reach the script. They must
+    pass: the skills compute diff bases with merge-base constantly."""
+
+    def test_merge_base_allowed(self):
+        self.assertFalse(denied(run("git-merge", "git merge-base main HEAD")))
+
+    def test_merge_tree_allowed(self):
+        self.assertFalse(denied(run("git-merge", "git merge-tree a b")))
+
+    def test_merge_base_with_branch_named_merge_allowed(self):
+        self.assertFalse(denied(run("git-merge", "git merge-base merge main")))
+
+    def test_commit_graph_allowed(self):
+        self.assertFalse(denied(run("git-commit", "git commit-graph write")))
+
+    def test_commit_tree_allowed(self):
+        self.assertFalse(denied(run("git-commit", "git commit-tree abc123")))
+
+
+class TestGhPr(unittest.TestCase):
+    def test_pr_merge_denied(self):
+        self.assertTrue(denied(run("gh-pr", "gh pr merge 42 --squash")))
+
+    def test_pr_create_denied(self):
+        self.assertTrue(denied(run("gh-pr", "gh pr create --fill")))
+
+    def test_pr_comment_denied(self):
+        self.assertTrue(denied(run("gh-pr", "gh pr comment 42 --body hi")))
+
+    def test_pr_review_approve_denied(self):
+        self.assertTrue(denied(run("gh-pr", "gh pr review 42 --approve")))
+
+    def test_pr_review_approve_reordered_denied(self):
+        # Flag-order robust: PR number before the flag still denies.
+        self.assertTrue(denied(run("gh-pr", "gh pr review --approve 42")))
+
+    def test_pr_review_comment_allowed(self):
+        # review-pr's sanctioned posting path must pass.
+        self.assertFalse(denied(run("gh-pr", "gh pr review 42 --comment --body x")))
+
+    def test_pr_review_request_changes_allowed(self):
+        self.assertFalse(denied(run("gh-pr", "gh pr review 42 --request-changes -b x")))
+
+    def test_pr_view_allowed(self):
+        self.assertFalse(denied(run("gh-pr", "gh pr view 42 --json title")))
+
+    def test_pr_diff_allowed(self):
+        self.assertFalse(denied(run("gh-pr", "gh pr diff 42")))
+
+
+class TestGhResources(unittest.TestCase):
+    def test_repo_create_denied(self):
+        self.assertTrue(denied(run("gh-repo", "gh repo create x --public")))
+
+    def test_repo_view_allowed(self):
+        self.assertFalse(denied(run("gh-repo", "gh repo view")))
+
+    def test_release_create_denied(self):
+        self.assertTrue(denied(run("gh-release", "gh release create v1")))
+
+    def test_issue_create_denied(self):
+        self.assertTrue(denied(run("gh-issue", "gh issue create --title x")))
+
+    def test_issue_view_allowed(self):
+        self.assertFalse(denied(run("gh-issue", "gh issue view 7")))
+
+
+class TestEscapeHatchAndFailOpen(unittest.TestCase):
+    def test_env_override_allows(self):
+        r = run("git-push", "git push origin main", env={"NITPICKLE_ALLOW_WRITES": "1"})
+        self.assertEqual(r.returncode, 0)
+        self.assertFalse(denied(r))
+
+    def test_unknown_family_allows_with_diagnostic(self):
+        r = run("git-bogus", "git bogus")
+        self.assertEqual(r.returncode, 0)
+        self.assertFalse(denied(r))
+        self.assertIn("unknown family", r.stderr)
+
+    def test_malformed_input_allows(self):
+        r = subprocess.run(
+            [sys.executable, HOOK, "git-push"],
+            input="not json", capture_output=True, text=True,
+        )
+        self.assertEqual(r.returncode, 0)
+        self.assertFalse(denied(r))
+
+
+if __name__ == "__main__":
+    unittest.main()
