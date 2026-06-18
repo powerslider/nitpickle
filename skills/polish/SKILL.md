@@ -11,7 +11,7 @@ defects, polish transforms and proves preservation. You propose each Refinement,
 prove it leaves observable behavior unchanged, and the human approves what lands.
 
 A green proof means the change is safe, never that it is better. Whether a safe
-change is an improvement is a taste call the human owns. See ADR-0005.
+change is an improvement is a taste call the human owns.
 
 ## Inputs
 
@@ -109,8 +109,8 @@ Offer per Refinement: `[Apply] [Skip] [Suggest only]`.
 ### 5. Apply on approval
 
 Apply an approved Refinement to the working tree, one at a time. Never apply in
-bulk without the user picking each. Never commit or push (ADR-0004), the human
-runs writes. Any code you write follows house style.
+bulk without the user picking each. Never commit or push, the human runs writes.
+Any code you write follows house style.
 
 ### 6. Run record
 

@@ -13,7 +13,7 @@ any pinned behavior on the human, and the human approves what lands.
 
 A passing test proves the code does what it currently does, never that the behavior
 is correct. Whether the pinned behavior is right is a Test oracle judgment the human
-owns. See ADR-0006.
+owns.
 
 The third proof-engine sibling. `preflight` reviews and proves defects, `polish`
 transforms and proves preservation, `test-spec` authors and proves tests. It runs at
@@ -136,8 +136,7 @@ Fail-demonstration and its tier, and its oracle status. Offer per test:
 
 Apply an approved Kept test to the working tree, one at a time, never in bulk. Never
 author production logic, in test-first hand the green step to the human. Never commit
-or push (ADR-0004), the human runs writes. Any test code you write follows house
-style.
+or push, the human runs writes. Any test code you write follows house style.
 
 ### 7. Run record
 

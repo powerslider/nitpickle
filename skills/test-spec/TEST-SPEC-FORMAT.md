@@ -67,7 +67,7 @@ code allows.
   with what the code does, never that the behavior is correct. Present the pinned
   behavior plainly and set `oracle: pinned` until the human confirms it is the intended
   spec, then `oracle: approved`. Never keep a pinned test as correct without that
-  confirmation, the program cannot be its own oracle (ADR-0006).
+  confirmation, the program cannot be its own oracle.
 - A **test-first** spec is written from the human's behavior list, the up-front spec,
   so `oracle: specified` by construction.
 
@@ -84,7 +84,7 @@ production code that turns them green, that is the human's step.
 - A characterization test with `oracle: pinned` is never applied until the human
   approves the pinned behavior.
 - test-spec authors no production logic and never commits, pushes, or runs any other
-  write command (ADR-0004).
+  write command.
 
 ## Presentation
 

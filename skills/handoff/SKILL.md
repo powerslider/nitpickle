@@ -14,7 +14,7 @@ This complements native session resume, which is machine-local and not
 reviewable. The artifact is human-readable and consumable by an agent that was
 never in this session. `/nitpickle:resume` reads it back. The handoff is
 ephemeral, and getting it to the other session or agent is the author's call
-(commit it, copy it, paste it), see ADR-0002.
+(commit it, copy it, paste it).
 
 ## Before you start: load context
 

@@ -55,7 +55,7 @@ an isolated worktree. Take the sharpest tier the code allows.
   bulk.
 - A `proof: none` Refinement is never applied by polish. The human may take it by
   hand.
-- Polish never commits, pushes, or runs any other write command (ADR-0004).
+- Polish never commits, pushes, or runs any other write command.
 
 ## Presentation
 

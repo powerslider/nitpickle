@@ -45,7 +45,7 @@ resolution  the proposed merged content, or the chosen side for file-level
 proof       test | repro | diff | none, the artifact that backs the resolution
 confidence  high | medium | low, derived from the proof, not a vibe
 severity    gated on the proof (a green proof does not raise a semantic
-            resolution to auto-apply, see ADR-0003)
+            resolution to auto-apply)
 intent      the behavior each side introduced, and a note that the resolution
             still carries both (the both-sides-intent check)
 ```

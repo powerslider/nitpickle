@@ -28,7 +28,7 @@ responsibility lives and *why*, without ever quoting the implementation.
    can't. Decorative diagrams are noise. If a sentence says it better, delete the
    diagram.
 6. **Speak the glossary, respect the decisions.** Use `CONTEXT.md` terms exactly.
-   Where the design embodies an accepted ADR, reference it (`see ADR-0003`)
+   Where the design embodies an accepted ADR, reference it (`see ADR-NNNN`)
    rather than re-arguing it.
 
 ## Section set (default)

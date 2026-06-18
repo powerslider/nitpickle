@@ -3,8 +3,7 @@
 The reference the `handoff` skill writes against and `resume` reads against. A
 Handoff is a standalone, ephemeral artifact at `docs/handoffs/<slug>.md` that
 captures the live progress of an in-flight task so a different session or agent
-can finish it. Getting it to that session is the author's responsibility. See
-ADR-0002.
+can finish it. Getting it to that session is the author's responsibility.
 
 A Handoff is transient working state, not a convention file. House style does
 not apply to it (the hook and validator exempt `docs/handoffs/`), so an embedded
