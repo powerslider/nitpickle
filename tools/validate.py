@@ -55,6 +55,7 @@ NUMBER_WORDS = {
 FULL_BLOCK_SKILLS = (
     "bootstrap", "design-spec", "feature-plan", "grill", "handoff",
     "preflight", "polish", "resolve-conflicts", "resume", "review-pr",
+    "test-spec",
 )
 CANONICAL_BLOCKS = [
     (f"skills/{name}/SKILL.md", ".nitpickle/README.md", marker)
@@ -83,7 +84,8 @@ CANONICAL_BLOCKS = [
 # cannot work reliably.
 LOAD_BEARING_TERMS = (
     "Finding", "Refinement", "Proof", "Proof-gated severity", "Feedback loop",
-    "Proof engine", "Proof surface", "Pre-flight", "PR review",
+    "Proof engine", "Proof surface", "Kept test", "Fail-demonstration",
+    "Characterization test", "Test oracle", "Pre-flight", "PR review",
     "Review packet", "Policy", "Preference", "Diff budget", "Trust zone",
     "Seam", "Deep module", "Deletion test", "Design spec", "Feature plan",
     "Convergence", "Plan gate", "AFK", "HITL", "Handoff", "Conflict",

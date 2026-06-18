@@ -4,6 +4,21 @@ One entry per released version. Bump the version in both
 `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json` for every
 release (`make bump VERSION=x.y.z`), and add the entry here.
 
+## 0.6.0
+
+- New `test-spec` skill: proof-driven test authorship, the third proof-engine sibling
+  alongside `preflight` and `polish`. It writes a failing spec test-first and
+  characterizes or strengthens tests for existing code. The deliverable is a Kept test,
+  it authors tests only and never production logic, so test-first it stops at red and
+  hands green to the human.
+- A Kept test is gated on a tiered Fail-demonstration, not coverage (ADR-0006). A killed
+  mutant or removed line proves the assertions discriminate, absent-code red proves only
+  non-vacuity. Correctness of pinned behavior stays a human Test oracle call, since a
+  program cannot be its own oracle.
+- It closes the missing-seam loop with `preflight` and `polish`, and turns a proven bug
+  into a Kept regression test. Glossary gains Test oracle, Characterization test,
+  Fail-demonstration, and Kept test.
+
 ## 0.5.0
 
 - New `polish` skill: a convention-aware code-quality pass, the inverse of

@@ -25,10 +25,10 @@ repo-specific guardrails, and an audit trail.
   test, reproduction, or diff) is downgraded to a nit, never dressed up as
   blocking. The one scoped exception: a provably missing test seam is itself
   evidence.
-- **Eleven composable skills** covering the pre-merge lifecycle: plan, gate,
-  spec, self-review, PR review, quality polishing, commit messages, convention
-  bootstrapping, handing off then resuming in-flight work, and resolving merge
-  conflicts.
+- **Twelve composable skills** covering the pre-merge lifecycle: plan, gate,
+  spec, self-review, PR review, quality polishing, test authorship, commit
+  messages, convention bootstrapping, handing off then resuming in-flight work,
+  and resolving merge conflicts.
 - **Per-repo conventions, git-tracked.** Domain glossary, recorded decisions,
   policy, and personal taste live in flat files you diff and commit.
 - **Trust zones.** PR text, issues, dependency docs, and web content are data,
@@ -84,8 +84,9 @@ Or enable it automatically in a repo via `.claude/settings.json`:
 Once installed, the skills are invoked as `/nitpickle:bootstrap`,
 `/nitpickle:preflight`, `/nitpickle:review-pr`, `/nitpickle:grill`,
 `/nitpickle:feature-plan`, `/nitpickle:design-spec`, `/nitpickle:polish`,
-`/nitpickle:commit-msg`, `/nitpickle:handoff`, `/nitpickle:resume`, and
-`/nitpickle:resolve-conflicts`. The house-style hook activates automatically.
+`/nitpickle:test-spec`, `/nitpickle:commit-msg`, `/nitpickle:handoff`,
+`/nitpickle:resume`, and `/nitpickle:resolve-conflicts`. The house-style hook
+activates automatically.
 
 ## Getting started
 
@@ -116,8 +117,10 @@ flowchart LR
     GR -->|approved plan| IMPL[/implement/]
     FP -.->|architecture heavy| DS[design-spec]
     DS -.-> GR
+    TS[test-spec] -.->|tests first| IMPL
     IMPL --> PF[preflight]
     PF -.->|quality pass| PL[polish]
+    PF -.->|missing test seam| TS
     PF -->|ready| PR([Open PR])
     CM[commit-msg] -.->|drafts the message| PR
     PR --> RV[review-pr]
@@ -125,7 +128,7 @@ flowchart LR
 
     classDef skill fill:#1f2937,stroke:#60a5fa,color:#e5e7eb
     classDef gate fill:#374151,stroke:#34d399,color:#e5e7eb
-    class FP,DS,PF,RV,BST,CM,PL skill
+    class FP,DS,PF,RV,BST,CM,PL,TS skill
     class GR gate
 ```
 
@@ -162,6 +165,7 @@ a mandate.
 | **preflight** | you're about to open a PR and want a strict self-review | your branch, `policy.yaml`, `preferences.md`, `CONTEXT.md`, `docs/adr/` | ranked, proof-gated findings (local) |
 | **review-pr** | you're reviewing someone else's GitHub PR | the PR via `gh`, repo conventions | `docs/reviews/pr-<n>.md` packet + approved comments |
 | **polish** | you want to improve the quality of code you wrote, refactoring toward the repo's idioms | the target (working tree or a path), `preferences.md`, `CONTEXT.md`, `docs/adr/`, `policy.yaml` | proven behavior-preserving Refinements, applied on approval (local) |
+| **test-spec** | you want tests written test-first, or the best tests identified and strengthened for existing code | the target (a behavior, working tree, or path), `policy.yaml`, `preferences.md`, `CONTEXT.md`, `docs/adr/` | proven Kept tests, applied on approval (local) |
 | **commit-msg** | you need a commit message for the staged changes | the diff, `preferences.md` | a ready-to-copy conventional-commit message |
 | **handoff** | you are pausing in-flight work for another session or agent to finish | git state, `docs/plans/<slug>.md` | `docs/handoffs/<slug>.md` |
 | **resume** | you are picking up in-flight work from a handoff | `docs/handoffs/<slug>.md`, the linked plan, git + policy commands | the verified work continued from its next step |
@@ -180,6 +184,7 @@ flowchart TD
     Q -->|About to open a PR| PF[preflight]
     Q -->|Reviewing a teammate's PR| RV[review-pr]
     Q -->|Improving the quality of code you wrote| PL[polish]
+    Q -->|Writing tests, test-first or for existing code| TS[test-spec]
     Q -->|Committing staged changes| CM[commit-msg]
     Q -->|Pausing work for another session| HO[handoff]
     Q -->|Picking up a paused task| RE[resume]
@@ -187,11 +192,12 @@ flowchart TD
 
     FP --> GR
     GR --> code[/write code/]
+    TS -.->|red spec| code
     code --> PF
     PF --> open([open PR])
 
     classDef s fill:#1f2937,stroke:#60a5fa,color:#e5e7eb
-    class IN,FP,GR,DS,PF,RV,PL,CM,HO,RE,RC s
+    class IN,FP,GR,DS,PF,RV,PL,TS,CM,HO,RE,RC s
 ```
 
 ### bootstrap - scaffold the convention layer
@@ -293,6 +299,41 @@ approval (see [ADR-0005](docs/adr/0005-polish-proves-preservation-not-betterment
 Quality only, it never hunts bugs or flags convention violations, those stay
 `preflight`'s. It never commits or pushes.
 
+### test-spec - proof-driven test authorship
+
+**When:** you want tests written test-first, or the highest-value tests identified
+and strengthened for code that already exists.
+
+The third proof-engine sibling. Where `preflight` proves defects and `polish` proves
+preservation, `test-spec` authors and proves the tests both only synthesize and throw
+away. The deliverable is a **Kept test**. Test-first it writes a failing executable
+spec and stops at red, handing the green step to you, it never authors production
+logic. For existing code it characterizes untested behavior and strengthens weak
+tests. Each Kept test must be shown to fail for the right reason, a tiered
+**Fail-demonstration** (a killed mutant or removed line is strong, a red run against
+absent code is weak), and the correctness of any pinned behavior is gated on you, the
+**Test oracle**, since a program cannot be its own oracle (see
+[ADR-0006](docs/adr/0006-test-spec-proves-a-test-can-fail-not-that-behavior-is-correct.md)).
+It ranks tests by risk, not coverage, applies on per-test approval, and never commits
+or pushes. It builds the seam `preflight` and `polish` flag missing, and turns a bug
+`preflight` proved into a Kept regression test.
+
+Reach for it when:
+
+- **New behavior, no code yet** - test-first, one red spec at a time, you write the
+  code that turns it green.
+- **Untested code you are about to change** - characterize first, so a later `polish`
+  refactor or `preflight` review has a seam to prove against.
+- **A bug just surfaced** - turn the failing reproduction into a Kept regression test
+  before the fix, so it stays fixed.
+- **A weak, brittle, or flaky suite** - kill surviving mutants, replace change-detector
+  tests that assert internals with behavior tests, and de-flake order-dependent or
+  timing-dependent ones.
+- **Code present, unsure what to test** - risk-based selection picks error and edge
+  branches, churn-heavy and coupled code, and the test form from the code's shape.
+- **`preflight` or `polish` flagged a missing seam** - that handoff is the cue. Build
+  the seam and its tests, then re-run the flagging skill.
+
 ### commit-msg - draft the commit message
 
 **When:** you need a commit message for the staged changes.
@@ -377,9 +418,9 @@ sequenceDiagram
 
 ## The shared substrate
 
-The review and planning skills read the same per-repo conventions and run on the
-same proof engine (`bootstrap` sets up those conventions). This is what makes
-findings consistent and trustworthy across the pipeline.
+The review, planning, and authoring skills read the same per-repo conventions and
+run on the same proof engine (`bootstrap` sets up those conventions). This is what
+makes findings consistent and trustworthy across the pipeline.
 
 ```mermaid
 flowchart TB
@@ -401,6 +442,8 @@ flowchart TB
     Engine --> S3[design-spec]
     Engine --> S4[preflight]
     Engine --> S5[review-pr]
+    Engine --> S7[test-spec]
+    Engine --> S8[polish]
     PRF --> S6[commit-msg]
     BST[bootstrap] --> Inputs
 
@@ -409,7 +452,7 @@ flowchart TB
     classDef s fill:#1f2937,stroke:#60a5fa,color:#e5e7eb
     class CTX,ADR,POL,PRF in
     class PROOF,TRUST eng
-    class S1,S2,S3,S4,S5,S6,BST s
+    class S1,S2,S3,S4,S5,S6,S7,S8,BST s
 ```
 
 - **`CONTEXT.md`** - domain *language* (glossary only, no implementation). Skills
@@ -469,7 +512,7 @@ review to `design-spec` / architecture work.
 ## Status
 
 Greenfield, packaged as a Claude Code plugin (`.claude-plugin/plugin.json`). The
-eleven skills run on Claude Code today against a real repo. Expect breaking changes while the
+twelve skills run on Claude Code today against a real repo. Expect breaking changes while the
 config and skill shapes settle.
 
 ## Contributing

@@ -188,9 +188,12 @@ finding?** If the answer is architectural - a missing seam, tangled callers, a
 shallow module hiding the bug - state it once, using the deletion-test and
 deep-module vocabulary, and offer to continue in a quality-improvement pass with
 `/nitpickle:polish`, which transforms toward the repo's idioms and proves behavior
-preservation. Make this recommendation *after* the findings are in, not before.
-Don't manufacture an architecture finding when the answer is just "write the
-test."
+preservation. If the answer is a missing test seam or just "write the test", offer
+`/nitpickle:test-spec`, which authors and proves the missing tests. When a finding's
+proof was a synthesized failing test that locks a real defect, offer to promote it
+into a Kept regression test via `/nitpickle:test-spec` rather than discard it. Make
+these recommendations *after* the findings are in, not before. Don't manufacture an
+architecture finding when a test is the real answer.
 
 ## After the run - log the metric
 

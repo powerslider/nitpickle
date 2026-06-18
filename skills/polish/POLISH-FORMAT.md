@@ -45,8 +45,9 @@ an isolated worktree. Take the sharpest tier the code allows.
 3. **No characterization seam.** The behavior cannot be pinned by a fast,
    deterministic test (untestable side effects, no reachable seam). The Refinement
    cannot be proven safe. Downgrade it to `proof: none`, present it as a
-   suggest-only Refinement, and report the missing seam, mirroring preflight's
-   missing-seam rule. Never apply it silently.
+   suggest-only Refinement, and report the missing seam (which
+   `/nitpickle:test-spec` can build), mirroring preflight's missing-seam rule.
+   Never apply it silently.
 
 ## Apply gate
 

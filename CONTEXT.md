@@ -36,6 +36,25 @@ convention in Matt Pocock's engineering skills.
 - **Proof surface** - where a change can be proven: the Seam a failing test or
   reproduction lives at. Every Feature plan phase names one up front. A change
   with no correct Proof surface is itself a Finding.
+- **Kept test** - the unit of test-spec output, a test authored to keep, in
+  contrast to the throwaway proof test that Pre-flight and polish synthesize and
+  discard. Carries a behavior, a chosen test form, the test code, a
+  Fail-demonstration, and an oracle status. Parallel to a Finding and a
+  Refinement, but the deliverable is the test itself.
+- **Fail-demonstration** - the tiered proof that a Kept test can fail for the
+  right reason. The strong tier is a killed mutant or a removed line, which shows
+  the assertions discriminate. The weak tier is a red run against absent code,
+  which shows only that the test is non-vacuous. Coverage is a gap-finder, never
+  the gate. See ADR-0006.
+- **Characterization test** - a test that pins code's current observable
+  behavior, not its intended behavior. The safety net for refactoring untested
+  code. Its passing proves consistency with what the code does, never that the
+  behavior is correct, so it is gated on a Test oracle. Used by test-spec and by
+  polish's preservation proof.
+- **Test oracle** - the judgment of whether observed behavior is correct.
+  NitPickle's stance is that the human is the oracle, the agent cannot
+  self-certify correctness from a program's own output. A Characterization test
+  pins behavior and waits on the human oracle before it is kept. See ADR-0006.
 
 ## Review surfaces
 

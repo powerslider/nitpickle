@@ -98,7 +98,7 @@ For each candidate, build the preservation proof in an isolated worktree
 working copy while proving. Follow the tiered protocol in POLISH-FORMAT.md:
 policy commands when they cover the touched code, else a synthesized throwaway
 characterization test, else downgrade to an unappliable suggestion and flag the
-missing seam.
+missing seam, which `/nitpickle:test-spec` can build.
 
 ### 4. Present
 
@@ -122,6 +122,8 @@ authorship banner.
 
 - Do not assert correctness Findings. Point back to `/nitpickle:preflight` for
   defects.
+- When a Refinement is downgraded for a missing characterization seam, point to
+  `/nitpickle:test-spec` to build the seam, then re-run.
 - Never commit, push, or run a write command. Apply only to the working tree on
   per-Refinement approval.
 - House style for any code you write: short, professional, WHAT not HOW, no
