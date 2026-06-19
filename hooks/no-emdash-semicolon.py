@@ -149,7 +149,7 @@ def find_violations(path, text):
 
 # Transient artifacts that embed captured code (diffs, proof evidence) we do not
 # author or maintain. House style does not apply. See .nitpickle/preferences.md.
-EXEMPT_DIRS = ("docs/handoffs/", "docs/reviews/")
+EXEMPT_DIRS = ("docs/handoffs/", "docs/reviews/", "docs/audits/")
 
 
 def is_exempt(path):
