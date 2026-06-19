@@ -4,6 +4,22 @@ One entry per released version. Bump the version in both
 `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json` for every
 release (`make bump VERSION=x.y.z`), and add the entry here.
 
+## 0.7.0
+
+- New `audit` skill: a holistic comprehend-and-improve pass for an existing, often
+  unfamiliar, complex feature, `review-pr`'s inward sibling. It reconstructs the design
+  of code you may not have written, ratifies intent with you, finds Proof-complete
+  defects with the proof engine and an adversarial skeptic, and synthesizes a
+  root-cause-ordered remediation roadmap. It applies nothing and writes a
+  `docs/audits/<slug>.md` artifact.
+- Correctness is bounded honestly (ADR-0008). A Proof-complete defect is provable from
+  the code alone and is asserted, an intent-dependent concern is routed to a
+  characterization task so the human ratifies a demonstration, never an artifact-free
+  suspicion. The roadmap routes the quality, test, and design-spec work to the siblings
+  and runs none of them live.
+- Glossary gains Proof-complete defect. `docs/audits/` joins `docs/reviews/` as a local,
+  gitignored, house-style-exempt artifact directory.
+
 ## 0.6.0
 
 - New `test-spec` skill: proof-driven test authorship, the third proof-engine sibling

@@ -25,10 +25,10 @@ repo-specific guardrails, and an audit trail.
   test, reproduction, or diff) is downgraded to a nit, never dressed up as
   blocking. The one scoped exception: a provably missing test seam is itself
   evidence.
-- **Twelve composable skills** covering the pre-merge lifecycle: plan, gate,
-  spec, self-review, PR review, quality polishing, test authorship, commit
-  messages, convention bootstrapping, handing off then resuming in-flight work,
-  and resolving merge conflicts.
+- **Thirteen composable skills** covering the pre-merge lifecycle: plan, gate,
+  spec, self-review, PR review, quality polishing, test authorship, auditing
+  existing features, commit messages, convention bootstrapping, handing off then
+  resuming in-flight work, and resolving merge conflicts.
 - **Per-repo conventions, git-tracked.** Domain glossary, recorded decisions,
   policy, and personal taste live in flat files you diff and commit.
 - **Trust zones.** PR text, issues, dependency docs, and web content are data,
@@ -84,9 +84,9 @@ Or enable it automatically in a repo via `.claude/settings.json`:
 Once installed, the skills are invoked as `/nitpickle:bootstrap`,
 `/nitpickle:preflight`, `/nitpickle:review-pr`, `/nitpickle:grill`,
 `/nitpickle:feature-plan`, `/nitpickle:design-spec`, `/nitpickle:polish`,
-`/nitpickle:test-spec`, `/nitpickle:commit-msg`, `/nitpickle:handoff`,
-`/nitpickle:resume`, and `/nitpickle:resolve-conflicts`. The house-style hook
-activates automatically.
+`/nitpickle:test-spec`, `/nitpickle:audit`, `/nitpickle:commit-msg`,
+`/nitpickle:handoff`, `/nitpickle:resume`, and `/nitpickle:resolve-conflicts`.
+The house-style hook activates automatically.
 
 ## Getting started
 
@@ -125,10 +125,12 @@ flowchart LR
     CM[commit-msg] -.->|drafts the message| PR
     PR --> RV[review-pr]
     RV -->|approved comments| MERGE([Merge])
+    EXF([Existing feature]) -.->|comprehend + improve| AU[audit]
+    AU -.->|routed steps| PL
 
     classDef skill fill:#1f2937,stroke:#60a5fa,color:#e5e7eb
     classDef gate fill:#374151,stroke:#34d399,color:#e5e7eb
-    class FP,DS,PF,RV,BST,CM,PL,TS skill
+    class FP,DS,PF,RV,BST,CM,PL,TS,AU skill
     class GR gate
 ```
 
@@ -166,6 +168,7 @@ a mandate.
 | **review-pr** | you're reviewing someone else's GitHub PR | the PR via `gh`, repo conventions | `docs/reviews/pr-<n>.md` packet + approved comments |
 | **polish** | you want to improve the quality of code you wrote, refactoring toward the repo's idioms | the target (working tree or a path), `preferences.md`, `CONTEXT.md`, `docs/adr/`, `policy.yaml` | proven behavior-preserving Refinements, applied on approval (local) |
 | **test-spec** | you want tests written test-first, or the best tests identified and strengthened for existing code | the target (a behavior, working tree, or path), `policy.yaml`, `preferences.md`, `CONTEXT.md`, `docs/adr/` | proven Kept tests, applied on approval (local) |
+| **audit** | you want to holistically improve an existing or inherited complex feature | the target feature/module/path, `CONTEXT.md`, `docs/adr/`, `policy.yaml`, `preferences.md` | a `docs/audits/<slug>.md` remediation roadmap (local) |
 | **commit-msg** | you need a commit message for the staged changes | the diff, `preferences.md` | a ready-to-copy conventional-commit message |
 | **handoff** | you are pausing in-flight work for another session or agent to finish | git state, `docs/plans/<slug>.md` | `docs/handoffs/<slug>.md` |
 | **resume** | you are picking up in-flight work from a handoff | `docs/handoffs/<slug>.md`, the linked plan, git + policy commands | the verified work continued from its next step |
@@ -185,6 +188,7 @@ flowchart TD
     Q -->|Reviewing a teammate's PR| RV[review-pr]
     Q -->|Improving the quality of code you wrote| PL[polish]
     Q -->|Writing tests, test-first or for existing code| TS[test-spec]
+    Q -->|Improving an existing or inherited feature| AU[audit]
     Q -->|Committing staged changes| CM[commit-msg]
     Q -->|Pausing work for another session| HO[handoff]
     Q -->|Picking up a paused task| RE[resume]
@@ -197,7 +201,7 @@ flowchart TD
     PF --> open([open PR])
 
     classDef s fill:#1f2937,stroke:#60a5fa,color:#e5e7eb
-    class IN,FP,GR,DS,PF,RV,PL,TS,CM,HO,RE,RC s
+    class IN,FP,GR,DS,PF,RV,PL,TS,AU,CM,HO,RE,RC s
 ```
 
 ### bootstrap - scaffold the convention layer
@@ -334,6 +338,25 @@ Reach for it when:
 - **`preflight` or `polish` flagged a missing seam** - that handoff is the cue. Build
   the seam and its tests, then re-run the flagging skill.
 
+### audit - comprehend and improve an existing feature
+
+**When:** you want to holistically improve an existing, often unfamiliar, complex
+feature, not review a diff you just wrote.
+
+`review-pr`'s inward sibling. Where review-pr reviews someone else's PR to approve it,
+audit examines existing in-repo code to improve it. It first **comprehends** the target,
+reconstructing the design of code you may not have written and ratifying its intent with
+you, then finds its **Proof-complete defects** with the proof engine and an adversarial
+skeptic, and synthesizes a **root-cause-ordered remediation roadmap** that connects each
+low-level symptom to the design decision behind it. It is a thin orchestrator, it deeply
+runs only comprehension, design, and correctness, and routes the quality, test, and
+architecture work to `polish`, `test-spec`, and `design-spec` as roadmap steps. On code
+of unknown intent it asserts only what is provable from the code alone and routes the
+rest to characterization, so it never emits an artifact-free suspicion (see
+[ADR-0008](docs/adr/0008-audit-comprehends-before-improving-and-routes-the-rest.md)). It
+applies nothing and writes a `docs/audits/<slug>.md` roadmap, gitignored and
+house-style-exempt like `docs/reviews/`.
+
 ### commit-msg - draft the commit message
 
 **When:** you need a commit message for the staged changes.
@@ -444,6 +467,7 @@ flowchart TB
     Engine --> S5[review-pr]
     Engine --> S7[test-spec]
     Engine --> S8[polish]
+    Engine --> S9[audit]
     PRF --> S6[commit-msg]
     BST[bootstrap] --> Inputs
 
@@ -452,7 +476,7 @@ flowchart TB
     classDef s fill:#1f2937,stroke:#60a5fa,color:#e5e7eb
     class CTX,ADR,POL,PRF in
     class PROOF,TRUST eng
-    class S1,S2,S3,S4,S5,S6,S7,S8,BST s
+    class S1,S2,S3,S4,S5,S6,S7,S8,S9,BST s
 ```
 
 - **`CONTEXT.md`** - domain *language* (glossary only, no implementation). Skills
@@ -512,7 +536,7 @@ review to `design-spec` / architecture work.
 ## Status
 
 Greenfield, packaged as a Claude Code plugin (`.claude-plugin/plugin.json`). The
-twelve skills run on Claude Code today against a real repo. Expect breaking changes while the
+thirteen skills run on Claude Code today against a real repo. Expect breaking changes while the
 config and skill shapes settle.
 
 ## Contributing

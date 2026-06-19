@@ -55,6 +55,12 @@ convention in Matt Pocock's engineering skills.
   NitPickle's stance is that the human is the oracle, the agent cannot
   self-certify correctness from a program's own output. A Characterization test
   pins behavior and waits on the human oracle before it is kept. See ADR-0006.
+- **Proof-complete defect** - a defect provable from the code alone with no
+  assumption about intended behavior, a crash, a nil deref, a leak, a deadlock,
+  dead code, or a use-before-set. audit asserts these, refuted by a skeptic.
+  Distinct from an intent-dependent concern, whose status as a bug needs the
+  intended behavior, unknown on unfamiliar code, so audit routes it to a
+  Characterization test rather than asserting it. See ADR-0008.
 
 ## Review surfaces
 
