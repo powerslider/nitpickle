@@ -56,6 +56,29 @@ Two PR-specific finding kinds beyond preflight:
   not ground truth.
 - **Compatibility/migration gap** - public surface or data shape changed without
   a migration note or rollback path.
+- **Intent-dependent concern** - the diff does something whose status as a bug needs
+  the intended behavior. Raised as a `question` to the author, never asserted blocking
+  (see below).
+
+## Proof-complete versus intent-dependent
+
+Classify a correctness finding before asserting it.
+
+- A **Proof-complete defect** is wrong provably from the code alone with no assumption
+  about intended behavior, a crash, a nil deref, an unhandled error path, a leak, a
+  deadlock, dead or unreachable code, a use-before-set. It is proven, refuted, and
+  asserted. A failing test that merely asserts the reviewer's assumed-correct output is
+  not a Proof-complete defect, the assertion encodes an unproven spec.
+- An **intent-dependent concern** has its status as a bug settled only by the intended
+  behavior. Check it against the PR's stated intent first, if the stated intent settles
+  it the diff contradicts the claim and it is the intent-mismatch kind. If not, raise it
+  as a question to the author (`severity: question`), never blocking. A PR review is a
+  dialogue the author resolves in the thread.
+- **The tie-break.** A concern wrong regardless of intent (an index that can exceed
+  length, an error silently dropped, a lock taken twice) stays on the Proof-complete
+  track and is proven, it is not demoted. Only a concern whose sole basis is an
+  assumption about the intended output becomes a question. The test, does refuting the
+  concern require knowing the intended output. A real mechanism-bug is never demoted.
 
 ## Adversarial verification
 
@@ -88,10 +111,16 @@ Findings (ranked: severity, then confidence)
 
 **Approval recommendation rule** (mechanical, not vibe):
 
-- any **proven** `blocking` → request changes
-- only `important`/unproven concerns → comment
+- a proven **Proof-complete defect** or a proven stated-intent mismatch → request changes
+- intent-dependent questions and other `important` or unproven concerns → comment
 - nothing above `nit` → approve (recommendation only - posting an Approve review
   is always the human's call)
+
+**Root-cause clustering** (when it pays). When three or more findings trace to one root
+cause (a shallow seam, a wrong abstraction, a missing contract), group them under the
+cause, stated once, with the dependent findings beneath, ranking preserved, and point the
+suggested comment at the cause. Fewer than three, or no shared cause, stays a flat list,
+the common case on a small PR. Not firing on a small PR is correct, not a failure.
 
 ## Suggested author comments
 

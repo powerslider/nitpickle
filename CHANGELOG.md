@@ -4,6 +4,17 @@ One entry per released version. Bump the version in both
 `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json` for every
 release (`make bump VERSION=x.y.z`), and add the entry here.
 
+## 0.8.0
+
+- `review-pr` bounds correctness like `audit` (ADR-0009). A Proof-complete defect is
+  asserted, an intent-dependent concern becomes a clarifying question to the author rather
+  than blocking, since a PR review is a dialogue, and a tie-break keeps real mechanism-bugs
+  as findings. The approval rule tightens to match, only a proven Proof-complete defect or
+  a stated-intent mismatch drives request changes. A behavior change, fewer wrong
+  request-changes.
+- The review packet groups findings that share a root cause when there are three or more,
+  else it stays a flat list.
+
 ## 0.7.0
 
 - New `audit` skill: a holistic comprehend-and-improve pass for an existing, often

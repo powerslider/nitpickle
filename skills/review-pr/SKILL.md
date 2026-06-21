@@ -95,6 +95,14 @@ Plus the PR-specific checks (REVIEW-FORMAT.md):
 - **Compatibility/migration** - public surface or data shape changed without a
   migration note or rollback path?
 
+**Classify correctness before asserting** (REVIEW-FORMAT.md). A Proof-complete defect,
+wrong provably from the code alone, is proven and asserted. An intent-dependent concern,
+whose defect status needs the intended behavior, is checked against the stated intent,
+else raised as a question to the author with `severity: question`, never blocking. A
+failing test that asserts your assumed-correct output is not proof of a defect. The
+tie-break keeps a mechanism-bug wrong-regardless-of-intent on the proof track, only an
+assumed-output judgment becomes a question.
+
 ### 6. Adversarially verify each proven-blocking finding
 
 Before a `blocking` finding enters the packet, try to **refute** it. Spawn a
@@ -111,10 +119,11 @@ proof must not reach the packet. Proof gates severity, this pass guards the proo
 ### 7. Assemble the review packet
 
 Build the packet per REVIEW-FORMAT.md: executive summary, risk classification,
-**mechanical approval recommendation** (proven blocking ⇒ request changes. Only
-unproven/important ⇒ comment. Nothing above nit ⇒ approve), intent check, and
-ranked findings - each with a suggested, collaborative author comment tied to its
-evidence.
+**mechanical approval recommendation** (a proven Proof-complete defect or stated-intent
+mismatch ⇒ request changes. Intent-dependent questions and unproven or important concerns
+⇒ comment. Nothing above nit ⇒ approve), intent check, and ranked findings, each with a
+suggested, collaborative author comment tied to its evidence. When three or more findings
+share a root cause, cluster them under it per REVIEW-FORMAT.md, else keep the flat list.
 
 Write the packet to `docs/reviews/pr-<n>.md` (derive the name from the PR number,
 or a slug when there is none). That path is local, gitignored, and exempt from
