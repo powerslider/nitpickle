@@ -209,13 +209,22 @@ locator or wait instead of the app is forbidden, that masks a real defect as a
 flaky test. Never commit or push without explicit approval of the specific
 change.
 
-### 9. Promote to a Kept test
+### 9. Serialize a flow and promote to a Kept test
 
-When a proof was a synthesized failing spec that locks a real defect, offer to
-promote it into a Kept regression test through `/nitpickle:test-spec`, which
-proves a Fail-demonstration and gates the keep on you. The promoted spec lands
-in the repo's Playwright suite and runs under `policy.yaml` `commands.test`.
-Make this offer after the Findings are in, not before.
+Two paths reach a Kept regression test, both handed to `/nitpickle:test-spec`,
+which proves a Fail-demonstration and gates the keep on you, the Test oracle.
+
+- **Proven defect.** When a proof was a synthesized failing spec that locks a
+  real defect, offer to promote it.
+- **Clean flow.** When the user wants to capture a flow that passed, serialize
+  the explored steps and locators into a draft Playwright spec that pins the
+  current behaviour. That spec is a Characterization test, kept only after the
+  oracle ratifies it.
+
+UI proof records the flow and emits the draft. `test-spec` owns what makes it
+worth keeping. The kept spec lands in the repo's Playwright suite and runs under
+`policy.yaml` `commands.test`. Make the offer after the Findings are in, not
+before.
 
 ## After the run
 

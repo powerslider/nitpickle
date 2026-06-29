@@ -4,6 +4,13 @@ One entry per released version. Bump the version in both
 `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json` for every
 release (`make bump VERSION=x.y.z`), and add the entry here.
 
+## 0.9.1
+
+- `ui-proof` can serialize a clean explored flow into a draft Playwright spec,
+  not just promote a proven defect spec. The keep stays with `test-spec`, which
+  characterizes the current behaviour gated on the Test oracle, so the
+  Fail-demonstration and oracle discipline are not duplicated in `ui-proof`.
+
 ## 0.9.0
 
 - New `ui-proof` skill: the proof engine pointed at a live browser. It drives a

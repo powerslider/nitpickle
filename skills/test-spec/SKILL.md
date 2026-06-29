@@ -153,7 +153,9 @@ never posted, and carries no tooling or authorship banner.
   Kept regression test, the defect-driven test (on a bug, first write a test that
   exposes it). It does the same for a UI defect `/nitpickle:ui-proof` proved with
   a throwaway Playwright spec, promoting it into a Kept regression test in the
-  Playwright suite.
+  Playwright suite. It also keeps a clean UI flow that `/nitpickle:ui-proof`
+  serialized into a draft Playwright spec, characterizing the current behaviour
+  gated on the Test oracle.
 - Once a seam exists, point back to `/nitpickle:preflight` for defect review and to
   `/nitpickle:polish` for quality. These are advisory next steps, never automatic.
 
