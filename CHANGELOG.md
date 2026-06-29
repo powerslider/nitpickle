@@ -4,6 +4,26 @@ One entry per released version. Bump the version in both
 `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json` for every
 release (`make bump VERSION=x.y.z`), and add the entry here.
 
+## 0.9.0
+
+- New `ui-proof` skill: the proof engine pointed at a live browser. It drives a
+  running app through the Playwright CLI, asserts Proof-complete UI defects (page
+  errors, unhandled rejections, same-origin 5xx, navigation dead-ends) with a
+  failing Playwright run as the proof, and routes intent-dependent concerns to an
+  oracle-pending Characterization test. Severity
+  stays gated on proof, with a determinism gate (red across N stable runs) before
+  a spec grades `proof: test`.
+- It detects its substrate and never configures it. No bundled MCP, no
+  `.nitpickle` browser config. App lifecycle leans on an existing Playwright
+  `webServer` or a passed-in URL, and the skill never owns the app process.
+- A proven defect can be fixed and re-proven (the fix patches the app, never the
+  frozen spec) on the `webServer` path, or proposed with re-proof deferred on an
+  external URL. A proven throwaway spec promotes to a Kept test via `test-spec`.
+- Adds a dogfood fixture under `tests/fixtures/ui-proof-app/`. Browser dogfood
+  runs stay off `make check`, which proves only the static skill contract. A
+  separate `ui-fixture` CI job runs the fixture smoke test on a Playwright image
+  so fixture rot is caught, without slowing the Python validator.
+
 ## 0.8.0
 
 - `review-pr` bounds correctness like `audit` (ADR-0009). A Proof-complete defect is

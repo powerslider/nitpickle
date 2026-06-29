@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>UI proof fixture - broken</title>
+  </head>
+  <body>
+    <h1>Broken</h1>
+
+    <!-- axe violation: image with no alt text -->
+    <img
+      src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=="
+      width="1"
+      height="1"
+    />
+
+    <!-- dead link: points at a route the server 404s -->
+    <a href="/does-not-exist">go nowhere</a>
+
+    <!-- axe violation: button with no accessible name -->
+    <button type="button"></button>
+
+    <script>
+      // Same-origin 5xx on a documented endpoint.
+      fetch("/api/boom");
+      // Unhandled promise rejection.
+      Promise.reject(new Error("seeded unhandled rejection"));
+      // Uncaught exception during load.
+      throw new Error("seeded uncaught exception");
+    </script>
+  </body>
+</html>

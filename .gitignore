@@ -9,3 +9,13 @@ docs/audits/
 # Python test artifacts
 __pycache__/
 *.pyc
+
+# ui-proof fixture app (Node deps and Playwright run artifacts)
+# package-lock.json is committed so CI can npm ci reproducibly.
+tests/fixtures/ui-proof-app/node_modules/
+tests/fixtures/ui-proof-app/test-results/
+tests/fixtures/ui-proof-app/playwright-report/
+tests/fixtures/ui-proof-app/blob-report/
+tests/fixtures/ui-proof-app/.playwright/
+# Stray Playwright output if a run is launched from another cwd
+test-results/

@@ -151,7 +151,9 @@ never posted, and carries no tooling or authorship banner.
   a missing test seam.
 - `test-spec` turns a bug `/nitpickle:preflight` proved with a throwaway test into a
   Kept regression test, the defect-driven test (on a bug, first write a test that
-  exposes it).
+  exposes it). It does the same for a UI defect `/nitpickle:ui-proof` proved with
+  a throwaway Playwright spec, promoting it into a Kept regression test in the
+  Playwright suite.
 - Once a seam exists, point back to `/nitpickle:preflight` for defect review and to
   `/nitpickle:polish` for quality. These are advisory next steps, never automatic.
 

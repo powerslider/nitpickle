@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>UI proof fixture - home</title>
+  </head>
+  <body>
+    <h1>Home</h1>
+    <img
+      src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=="
+      alt="placeholder pixel"
+      width="1"
+      height="1"
+    />
+    <nav><a href="/">Home</a> <a href="/broken">Broken</a></nav>
+    <button type="button" id="load">Load</button>
+    <script>
+      // Clean state: a successful same-origin request, no thrown errors.
+      fetch("/api/ok")
+        .then((r) => r.json())
+        .then(() => {});
+    </script>
+  </body>
+</html>

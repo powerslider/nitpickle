@@ -46,7 +46,7 @@ DASH_ENTITIES = (
 NUMBER_WORDS = {
     1: "one", 2: "two", 3: "three", 4: "four", 5: "five", 6: "six",
     7: "seven", 8: "eight", 9: "nine", 10: "ten", 11: "eleven", 12: "twelve",
-    13: "thirteen",
+    13: "thirteen", 14: "fourteen",
 }
 
 # (block_file, canonical_file, marker) triples whose marker-delimited content
@@ -56,7 +56,7 @@ NUMBER_WORDS = {
 FULL_BLOCK_SKILLS = (
     "bootstrap", "design-spec", "feature-plan", "grill", "handoff",
     "preflight", "polish", "resolve-conflicts", "resume", "review-pr",
-    "test-spec", "audit",
+    "test-spec", "audit", "ui-proof",
 )
 CANONICAL_BLOCKS = [
     (f"skills/{name}/SKILL.md", ".nitpickle/README.md", marker)
@@ -78,6 +78,11 @@ CANONICAL_BLOCKS = [
         "docs/ARCHITECTURE.md",
         "<!-- nitpickle:finding-schema -->",
     ),
+    (
+        "skills/ui-proof/SKILL.md",
+        "docs/ARCHITECTURE.md",
+        "<!-- nitpickle:finding-schema -->",
+    ),
 ]
 
 # Load-bearing vocabulary the skills use. Each must have a glossary entry in
@@ -87,7 +92,7 @@ LOAD_BEARING_TERMS = (
     "Finding", "Refinement", "Proof", "Proof-gated severity", "Feedback loop",
     "Proof engine", "Proof surface", "Kept test", "Fail-demonstration",
     "Characterization test", "Test oracle", "Proof-complete defect",
-    "Pre-flight", "PR review",
+    "Pre-flight", "PR review", "UI proof",
     "Review packet", "Policy", "Preference", "Diff budget", "Trust zone",
     "Seam", "Deep module", "Deletion test", "Design spec", "Feature plan",
     "Convergence", "Plan gate", "AFK", "HITL", "Handoff", "Conflict",

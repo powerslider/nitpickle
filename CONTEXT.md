@@ -71,6 +71,11 @@ convention in Matt Pocock's engineering skills.
   pointed outward: verify the diff against its stated intent, proof-gated
   Findings, suggested author comments gated on human approval. The outward
   counterpart to Pre-flight.
+- **UI proof** - reviewing a running app's behaviour with the proof engine
+  pointed at the browser. A failing Playwright run is the Feedback loop, a
+  Proof-complete UI defect is asserted and proven, an intent-dependent concern
+  is routed to a Characterization test gated on the Test oracle. The inward
+  review surface for UI behaviour.
 - **Review mode** - a lens that shapes what a review emphasizes (fast scan, deep,
   security, concurrency, performance, api design, test coverage, migration,
   release-risk). All modes obey Proof-gated severity.

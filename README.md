@@ -25,10 +25,11 @@ repo-specific guardrails, and an audit trail.
   test, reproduction, or diff) is downgraded to a nit, never dressed up as
   blocking. The one scoped exception: a provably missing test seam is itself
   evidence.
-- **Thirteen composable skills** covering the pre-merge lifecycle: plan, gate,
+- **Fourteen composable skills** covering the pre-merge lifecycle: plan, gate,
   spec, self-review, PR review, quality polishing, test authorship, auditing
-  existing features, commit messages, convention bootstrapping, handing off then
-  resuming in-flight work, and resolving merge conflicts.
+  existing features, inspecting UI behaviour in a live browser, commit messages,
+  convention bootstrapping, handing off then resuming in-flight work, and
+  resolving merge conflicts.
 - **Per-repo conventions, git-tracked.** Domain glossary, recorded decisions,
   policy, and personal taste live in flat files you diff and commit.
 - **Trust zones.** PR text, issues, dependency docs, and web content are data,
@@ -84,8 +85,9 @@ Or enable it automatically in a repo via `.claude/settings.json`:
 Once installed, the skills are invoked as `/nitpickle:bootstrap`,
 `/nitpickle:preflight`, `/nitpickle:review-pr`, `/nitpickle:grill`,
 `/nitpickle:feature-plan`, `/nitpickle:design-spec`, `/nitpickle:polish`,
-`/nitpickle:test-spec`, `/nitpickle:audit`, `/nitpickle:commit-msg`,
-`/nitpickle:handoff`, `/nitpickle:resume`, and `/nitpickle:resolve-conflicts`.
+`/nitpickle:test-spec`, `/nitpickle:audit`, `/nitpickle:ui-proof`,
+`/nitpickle:commit-msg`, `/nitpickle:handoff`, `/nitpickle:resume`, and
+`/nitpickle:resolve-conflicts`.
 The house-style hook activates automatically.
 
 ## Getting started
@@ -169,6 +171,7 @@ a mandate.
 | **polish** | you want to improve the quality of code you wrote, refactoring toward the repo's idioms | the target (working tree or a path), `preferences.md`, `CONTEXT.md`, `docs/adr/`, `policy.yaml` | proven behavior-preserving Refinements, applied on approval (local) |
 | **test-spec** | you want tests written test-first, or the best tests identified and strengthened for existing code | the target (a behavior, working tree, or path), `policy.yaml`, `preferences.md`, `CONTEXT.md`, `docs/adr/` | proven Kept tests, applied on approval (local) |
 | **audit** | you want to holistically improve an existing or inherited complex feature | the target feature/module/path, `CONTEXT.md`, `docs/adr/`, `policy.yaml`, `preferences.md` | a `docs/audits/<slug>.md` remediation roadmap (local) |
+| **ui-proof** | you want to prove and fix UI defects in a running app with browser automation | a URL or `playwright.config.ts`, `CONTEXT.md`, `preferences.md` | proof-gated UI findings with failing Playwright specs, fixed on approval (local) |
 | **commit-msg** | you need a commit message for the staged changes | the diff, `preferences.md` | a ready-to-copy conventional-commit message |
 | **handoff** | you are pausing in-flight work for another session or agent to finish | git state, `docs/plans/<slug>.md` | `docs/handoffs/<slug>.md` |
 | **resume** | you are picking up in-flight work from a handoff | `docs/handoffs/<slug>.md`, the linked plan, git + policy commands | the verified work continued from its next step |
@@ -536,7 +539,7 @@ review to `design-spec` / architecture work.
 ## Status
 
 Greenfield, packaged as a Claude Code plugin (`.claude-plugin/plugin.json`). The
-thirteen skills run on Claude Code today against a real repo. Expect breaking changes while the
+fourteen skills run on Claude Code today against a real repo. Expect breaking changes while the
 config and skill shapes settle.
 
 ## Contributing
