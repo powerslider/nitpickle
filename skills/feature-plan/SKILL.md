@@ -43,7 +43,7 @@ taste, diff budget, and the proof discipline.
 
 <!-- nitpickle:resolution -->
 Config resolution for `policy.yaml` and `preferences.md`: read the repo-local
-`.nitpickle/<file>` and the global default at `~/.claude/nitpickle/<file>` and
+`.nitpickle/<file>` and the global default (`~/.config/nitpickle/<file>`, or `~/.claude/nitpickle/<file>` on Claude Code) and
 merge them. Local overrides global per top-level key, `rules` is the union of
 both, and when only one exists it applies unchanged.
 <!-- nitpickle:resolution -->
@@ -65,7 +65,7 @@ the PR as a finding.
 Gather detailed context from every source that's appropriate. Run independent
 strands in parallel where possible:
 
-- **Codebase** - use the `Explore` agent (medium-to-thorough breadth) to map
+- **Codebase** - use a read-only exploration subagent (medium-to-thorough breadth) to map
   affected components, the seams the change lives at, prior art to reuse, test
   conventions, and risky areas. Look for what already exists before proposing
   anything new.

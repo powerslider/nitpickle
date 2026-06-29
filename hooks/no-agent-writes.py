@@ -20,6 +20,7 @@ Fail open: malformed input or an unknown family exits 0 with a stderr diagnostic
 import sys
 import json
 import os
+import re
 import shlex
 
 # gh subcommands that write or go outward, blocked. Read siblings (view, list,
@@ -104,6 +105,53 @@ def gh_subcommand(toks, group):
     return None
 
 
+# Shell operators that separate one command from the next. Codex fires the hook
+# on the whole Bash command with no per-family decomposition, so self-dispatch
+# splits here and judges each segment on its own leading token. Best effort:
+# exotic quoting or command substitution can still hide a write. See ADR-0004.
+SHELL_SPLIT = re.compile(r"&&|\|\||;|\n|\|")
+# Wrappers that precede the real command and should be skipped to find it.
+COMMAND_WRAPPERS = {"sudo", "command", "nohup", "time", "env", "nice", "stdbuf"}
+ENV_ASSIGN = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*=")
+# git subcommand to the family that guards it.
+GIT_SUBCOMMAND_FAMILY = {sub: fam for fam, sub in GIT_FAMILY_SUBCOMMAND.items()}
+GH_GROUP_FAMILY = {
+    "pr": "gh-pr", "repo": "gh-repo", "release": "gh-release", "issue": "gh-issue",
+}
+
+
+def leading_token(toks):
+    """The command's real leading token, past env-assignments and wrappers."""
+    for t in toks:
+        if ENV_ASSIGN.match(t) or t in COMMAND_WRAPPERS:
+            continue
+        return t
+    return None
+
+
+def self_dispatch_deny(command):
+    """Deny reason for any write segment in a full command, anchoring family
+    detection to each segment's leading token. The path for a harness (Codex)
+    that fires on the whole Bash call without the per-family `if` matcher."""
+    for segment in SHELL_SPLIT.split(command):
+        toks = tokens(segment)
+        if not toks:
+            continue
+        lead = leading_token(toks)
+        if lead == "git":
+            family = GIT_SUBCOMMAND_FAMILY.get(git_subcommand(toks))
+        elif lead == "gh":
+            rest = toks[toks.index("gh") + 1:]
+            family = GH_GROUP_FAMILY.get(rest[0]) if rest else None
+        else:
+            continue
+        if family:
+            reason = deny_reason(family, segment)
+            if reason:
+                return reason
+    return None
+
+
 def deny_reason(family, command):
     """The deny reason for a write command in a known family, or None to allow."""
     toks = tokens(command)
@@ -140,8 +188,11 @@ def main():
     if os.environ.get("NITPICKLE_ALLOW_WRITES"):
         sys.exit(0)
 
-    family = sys.argv[1] if len(sys.argv) > 1 else ""
-    if family not in KNOWN_FAMILIES:
+    # No family argument means self-dispatch: the harness (Codex) fired on the
+    # whole Bash call and the script finds the write itself. A named family is
+    # the Claude path, where the hooks.json `if` matcher pre-selected it.
+    family = sys.argv[1] if len(sys.argv) > 1 else "auto"
+    if family != "auto" and family not in KNOWN_FAMILIES:
         print(
             "nitpickle guardrail: unknown family %r, allowing" % family,
             file=sys.stderr,
@@ -158,7 +209,7 @@ def main():
         sys.exit(0)
 
     command = (data.get("tool_input") or {}).get("command") or ""
-    reason = deny_reason(family, command)
+    reason = self_dispatch_deny(command) if family == "auto" else deny_reason(family, command)
 
     if reason:
         print(json.dumps({

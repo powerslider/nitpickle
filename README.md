@@ -54,10 +54,16 @@ repo-specific guardrails, and an audit trail.
 
 ## Install
 
-Requirements: **Claude Code** (CLI, desktop, IDE, or web), **git**, and
-**python3** (the house-style hook). `review-pr` additionally needs the
-**GitHub CLI (`gh`)**. Skills detect your repo's toolchain (Go, Node, Rust,
+Requirements: **Claude Code** (CLI, desktop, IDE, or web) or **OpenAI Codex**,
+**git**, and **python3** (the house-style hook). `review-pr` additionally needs
+the **GitHub CLI (`gh`)**. Skills detect your repo's toolchain (Go, Node, Rust,
 Python, ...) for test and lint commands, so no specific language is required.
+
+NitPickle is authored once and installs on either harness. The skills and hooks
+live under `skills/` and `hooks/`, and the Codex layout (`.agents/skills` plus a
+Codex hooks config) is generated on demand, never committed (see ADR-0010).
+
+### Claude Code
 
 This repo is both the plugin and its own marketplace.
 
@@ -82,7 +88,22 @@ Or enable it automatically in a repo via `.claude/settings.json`:
 }
 ```
 
-Once installed, the skills are invoked as `/nitpickle:bootstrap`,
+### Codex
+
+From a clone, generate and install the Codex layout into your home:
+
+```
+make install-codex
+```
+
+This writes the skills to `~/.agents/skills`, the hook scripts to
+`~/.config/nitpickle/hooks` with a `~/.codex/hooks.json` pointing at them, and
+seeds the global defaults under `~/.config/nitpickle` if absent. On Codex the
+skills are invoked as `$preflight`, `$grill`, and so on, or chosen implicitly by
+description. The Write guardrail runs as a Codex PreToolUse hook, best-effort per
+ADR-0010, and Codex's own approval policy is the recommended airtight boundary.
+
+Once installed, on Claude Code the skills are invoked as `/nitpickle:bootstrap`,
 `/nitpickle:preflight`, `/nitpickle:review-pr`, `/nitpickle:grill`,
 `/nitpickle:feature-plan`, `/nitpickle:design-spec`, `/nitpickle:polish`,
 `/nitpickle:test-spec`, `/nitpickle:audit`, `/nitpickle:ui-proof`,

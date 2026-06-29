@@ -4,6 +4,26 @@ One entry per released version. Bump the version in both
 `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json` for every
 release (`make bump VERSION=x.y.z`), and add the entry here.
 
+## 0.10.0
+
+- NitPickle is harness-agnostic. The skills and hooks are authored once and
+  install on OpenAI Codex as well as Claude Code. `make install-codex` generates
+  the Codex layout (`.agents/skills`, a `.codex/hooks.json`, seeded global
+  defaults) into your home. Generated artifacts are never committed, they
+  generate on demand (see ADR-0010).
+- `tools/generate.py` renders the Codex layout from the canonical source,
+  rewriting `/nitpickle:<name>` cross-references to Codex `$name` invocation syntax.
+  Validator check 3b resolves every rewritten `$name`, and check 10 keeps
+  Claude-only tokens out of the canonical skills.
+- The two Python hooks became harness-neutral. The Write guardrail self-dispatches
+  on Codex (it splits the command on shell operators and anchors to each
+  segment's leading token, fixing a chained-commit false negative and a
+  string-mention false positive). The house-style hook parses a Codex apply_patch
+  body per file. The deny contract was already shared.
+- Honest limits, recorded in ADR-0010: the guardrail is best-effort on Codex
+  without the harness pre-filter, and house style is weaker on a Codex
+  apply_patch edit.
+
 ## 0.9.1
 
 - `ui-proof` can serialize a clean explored flow into a draft Playwright spec,

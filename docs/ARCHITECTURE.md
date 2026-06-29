@@ -1,9 +1,11 @@
 # Architecture
 
-How the NitPickle plugin works. The scope is a Claude Code plugin: skills, a
-convention layer, one hook, and this repo's own proof tooling. No services, no
-database, no runtime, no server. Everything runs inside Claude Code against a
-local branch or, for PR review, a local checkout via `gh`.
+How the NitPickle plugin works. The scope is harness-agnostic: skills, a
+convention layer, two hooks, and this repo's own proof tooling, authored once and
+installed on Claude Code or Codex. The Codex layout is generated on demand from
+the canonical source (see ADR-0010). No services, no database, no runtime, no
+server. Everything runs inside the agent against a local branch or, for PR
+review, a local checkout via `gh`.
 
 ## Shape
 

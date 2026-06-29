@@ -10,6 +10,8 @@ Checks:
   2. The parsed description matches its raw line, catching silent YAML comment
      truncation from an unquoted hash (valid YAML, invisible to a parse check).
   3. Every /nitpickle:<name> reference resolves to a shipped skill.
+  3b. The Codex rewrite of every /nitpickle:x yields a resolvable `$x` with no
+     surviving namespace token, so a generator bug cannot ship a wrong chain.
   4. The README's written-out skill count matches the skills directory.
   5. plugin.json and marketplace.json versions match.
   6. No banned characters in tracked files: literal em or en dash anywhere,
@@ -18,6 +20,8 @@ Checks:
   7. Trigger collision phrases appear in at most one skill description.
   8. Every load-bearing glossary term has a CONTEXT.md entry.
   9. Verbatim canonical blocks match their canonical home byte for byte.
+  10. Skill bodies carry no Claude-Code-only token, so the canonical source stays
+     portable to Codex.
 
 PyYAML sharpens check 1 and 2 when installed (it is a CI dependency, not a
 runtime one). Without it the checks degrade to regex on the raw lines.
@@ -27,6 +31,9 @@ import os
 import re
 import subprocess
 import sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import generate  # noqa: E402
 
 try:
     import yaml
@@ -216,6 +223,50 @@ def check_references(root, skill_names, files):
                 fail(f"{rel} references /nitpickle:{ref}, which does not exist")
 
 
+# Tokens that name a Claude-Code-only mechanism. Banned in canonical skill
+# bodies, which are the shared source for every harness. Naming both harnesses
+# for contrast (CLAUDE.md on Claude Code, AGENTS.md on Codex) is fine.
+HARNESS_SPECIFIC_TOKENS = ("`Explore` agent", "${CLAUDE_PLUGIN_ROOT}")
+
+
+def check_harness_neutral_skills(root):
+    """Check 10. Fail on a Claude-Code-only token in a canonical skill body."""
+    skills_dir = os.path.join(root, "skills")
+    for name in sorted(os.listdir(skills_dir)):
+        sdir = os.path.join(skills_dir, name)
+        if not os.path.isdir(sdir):
+            continue
+        for entry in sorted(os.listdir(sdir)):
+            if not entry.endswith(".md"):
+                continue
+            text = read(os.path.join(sdir, entry))
+            for token in HARNESS_SPECIFIC_TOKENS:
+                if token in text:
+                    fail(f"skills/{name}/{entry}: Claude-only token {token!r}, keep skills portable")
+
+
+def check_codex_references(root, skill_names):
+    """Check 3b. The generator rewrites /nitpickle:x to Codex `$x`. Assert no
+    namespace token survives the rewrite and every rewritten reference resolves,
+    so a generator bug cannot ship a silently-wrong Codex keep-chain."""
+    skills_dir = os.path.join(root, "skills")
+    for name in sorted(os.listdir(skills_dir)):
+        sdir = os.path.join(skills_dir, name)
+        if not os.path.isdir(sdir):
+            continue
+        for entry in sorted(os.listdir(sdir)):
+            if not entry.endswith(".md"):
+                continue
+            rel = f"skills/{name}/{entry}"
+            canonical = read(os.path.join(sdir, entry))
+            rendered = generate.to_codex_ref(canonical)
+            if "/nitpickle:" in rendered:
+                fail(f"{rel}: a /nitpickle: reference survived the Codex rewrite")
+            for ref in re.findall(r"/nitpickle:([a-z0-9-]+)", canonical):
+                if ref in skill_names and f"${ref}" not in rendered:
+                    fail(f"{rel}: Codex rewrite lost reference ${ref}")
+
+
 def check_readme_count(root, skill_names):
     readme = read(os.path.join(root, "README.md"))
     expected = NUMBER_WORDS.get(len(skill_names), str(len(skill_names)))
@@ -323,6 +374,8 @@ def main():
     files = tracked_files(root)
     skill_names = check_skills(root)
     check_references(root, skill_names, files)
+    check_codex_references(root, skill_names)
+    check_harness_neutral_skills(root)
     check_readme_count(root, skill_names)
     check_versions(root)
     check_banned_characters(root, files)

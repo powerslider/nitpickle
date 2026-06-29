@@ -44,6 +44,56 @@ def incoming_text(tool_input):
     return "\n".join(parts)
 
 
+# Codex edits arrive as an apply_patch body rather than Write/Edit fields. The
+# body is carried in tool_input.command (or input/patch). One patch can touch
+# several files, so added lines bind to their current file header, not one path.
+# The assumed shape is captured in tests/fixtures/codex/, pending a real-codex
+# smoke. Honest limit: a fragment rarely has balanced code fences, so the prose
+# check fails open more often here than for an Edit, enforcement is weaker.
+_PATCH_FILE_HEADER = re.compile(r"^\*\*\* (?:Add|Update|Delete) File: (.+)$")
+_PATCH_MOVE_HEADER = re.compile(r"^\*\*\* Move to: (.+)$")
+
+
+def apply_patch_body(tool_input):
+    """The apply_patch text from a Codex tool_input, or None if this is not one."""
+    for key in ("command", "input", "patch"):
+        value = tool_input.get(key)
+        if isinstance(value, str) and "*** Begin Patch" in value:
+            return value
+    return None
+
+
+def apply_patch_targets(patch):
+    """Map each file the patch writes to its added text. Added lines bind to the
+    current file header so a multi-file patch is checked per path, and a rename
+    (Move to) switches the path. Exactly one leading marker char is stripped."""
+    added = {}
+    current = None
+    for line in patch.splitlines():
+        header = _PATCH_FILE_HEADER.match(line) or _PATCH_MOVE_HEADER.match(line)
+        if header:
+            current = header.group(1).strip()
+            added.setdefault(current, [])
+            continue
+        if line.startswith("***") or line.startswith("@@"):
+            continue
+        if current is not None and line.startswith("+"):
+            added[current].append(line[1:])
+    return {path: "\n".join(lines) for path, lines in added.items() if lines}
+
+
+def check_targets(tool_input):
+    """The (path, text) pairs to check. Write/Edit/MultiEdit yield one, a Codex
+    apply_patch yields one per file it writes."""
+    text = incoming_text(tool_input)
+    if text:
+        return [(tool_input.get("file_path") or "", text)]
+    patch = apply_patch_body(tool_input)
+    if patch:
+        return list(apply_patch_targets(patch).items())
+    return []
+
+
 def strip_code_spans(text):
     """`text` with markdown-style code removed: fenced (```...```) then inline
     (`...`). None when fence parity is odd, since the code region is then
@@ -168,14 +218,14 @@ def main():
         sys.exit(0)
 
     tool_input = data.get("tool_input") or {}
-    path = tool_input.get("file_path") or ""
-    if is_exempt(path):
-        sys.exit(0)
-    text = incoming_text(tool_input)
-    if not text:
-        sys.exit(0)
+    violations = []
+    for path, text in check_targets(tool_input):
+        if is_exempt(path) or not text:
+            continue
+        for v in find_violations(path, text):
+            if v not in violations:
+                violations.append(v)
 
-    violations = find_violations(path, text)
     if violations:
         reason = (
             "Blocked by NitPickle house style: found "

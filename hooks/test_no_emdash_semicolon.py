@@ -29,6 +29,11 @@ def hook_input(path, content):
     return json.dumps({"tool_input": {"file_path": path, "content": content}})
 
 
+def apply_patch_input(patch_body):
+    """A Codex apply_patch edit, the body carried in tool_input.command."""
+    return json.dumps({"tool_name": "apply_patch", "tool_input": {"command": patch_body}})
+
+
 def denied(result):
     if not result.stdout.strip():
         return False
@@ -224,6 +229,58 @@ class TestInputHandling(unittest.TestCase):
         })
         result = run_hook(payload)
         self.assertTrue(denied(result))
+
+
+class TestCodexApplyPatch(unittest.TestCase):
+    """Codex edits arrive as an apply_patch body, not Write/Edit fields. Added
+    lines bind to their current file header so a multi-file patch is path-aware.
+    Banned chars are built with chr() so this file stays clean."""
+
+    def _patch(self, *lines):
+        return "\n".join(("*** Begin Patch",) + lines + ("*** End Patch",))
+
+    def test_clean_add_file_passes(self):
+        body = self._patch("*** Add File: notes.md", "+Plain prose, no problems.")
+        self.assertFalse(denied(run_hook(apply_patch_input(body))))
+
+    def test_added_em_dash_blocked(self):
+        body = self._patch("*** Add File: notes.md", "+bad " + EM_DASH + " dash")
+        self.assertTrue(denied(run_hook(apply_patch_input(body))))
+
+    def test_added_semicolon_in_md_prose_blocked(self):
+        body = self._patch("*** Add File: notes.md", "+a clause" + chr(0x3B) + " another")
+        self.assertTrue(denied(run_hook(apply_patch_input(body))))
+
+    def test_deleted_line_not_checked(self):
+        # Only added lines matter, a removed em dash must not block.
+        body = self._patch("*** Update File: notes.md", "-old " + EM_DASH + " text", "+clean")
+        self.assertFalse(denied(run_hook(apply_patch_input(body))))
+
+    def test_semicolon_in_go_code_allowed(self):
+        # A semicolon in .go code is a statement terminator, not prose.
+        body = self._patch("*** Update File: main.go", "+x := 1" + chr(0x3B))
+        self.assertFalse(denied(run_hook(apply_patch_input(body))))
+
+    def test_violation_in_second_file_of_multifile_patch_blocked(self):
+        # Path binding: the offending line belongs to the second file, not the first.
+        body = self._patch(
+            "*** Update File: main.go", "+x := 1",
+            "*** Add File: notes.md", "+bad " + EM_DASH + " dash",
+        )
+        self.assertTrue(denied(run_hook(apply_patch_input(body))))
+
+    def test_rename_binds_added_lines_to_new_path(self):
+        body = self._patch(
+            "*** Update File: old.md",
+            "*** Move to: new.md",
+            "+bad " + EM_DASH + " dash",
+        )
+        self.assertTrue(denied(run_hook(apply_patch_input(body))))
+
+    def test_content_line_starting_with_plus_keeps_one_marker(self):
+        # A real added line whose content starts with a plus keeps it after one strip.
+        body = self._patch("*** Add File: notes.md", "++1 means clean")
+        self.assertFalse(denied(run_hook(apply_patch_input(body))))
 
 
 class TestHandoffExemption(unittest.TestCase):

@@ -19,3 +19,7 @@ tests/fixtures/ui-proof-app/blob-report/
 tests/fixtures/ui-proof-app/.playwright/
 # Stray Playwright output if a run is launched from another cwd
 test-results/
+
+# Generated Codex layout (generate on demand, never committed)
+.agents/
+.codex/

@@ -1,7 +1,18 @@
-.PHONY: test lint check bump
+.PHONY: test lint check bump install-codex codex-dogfood
+
+# Install the Codex layout into the user's home (skills, hooks, defaults).
+install-codex:
+	python3 tools/generate.py --install
+
+# Generate a gitignored repo-local Codex layout for dogfooding with real codex.
+codex-dogfood:
+	python3 tools/generate.py .agents/skills
+	python3 -c "import sys; sys.path.insert(0,'tools'); import generate, os; generate.generate_hooks_config('.', '.codex')"
+	@echo "generated .agents/skills and .codex/hooks.json (gitignored)"
 
 test:
 	python3 -m unittest discover -s hooks -p "test_*.py"
+	python3 -m unittest discover -s tools -p "test_*.py"
 
 lint:
 	python3 tools/validate.py

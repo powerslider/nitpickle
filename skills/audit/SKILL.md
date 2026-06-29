@@ -33,7 +33,7 @@ defaults):
 
 <!-- nitpickle:resolution -->
 Config resolution for `policy.yaml` and `preferences.md`: read the repo-local
-`.nitpickle/<file>` and the global default at `~/.claude/nitpickle/<file>` and
+`.nitpickle/<file>` and the global default (`~/.config/nitpickle/<file>`, or `~/.claude/nitpickle/<file>` on Claude Code) and
 merge them. Local overrides global per top-level key, `rules` is the union of
 both, and when only one exists it applies unchanged.
 <!-- nitpickle:resolution -->
