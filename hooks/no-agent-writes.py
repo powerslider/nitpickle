@@ -90,34 +90,88 @@ def git_subcommand(toks):
     return None
 
 
-def gh_subcommand(toks, group):
-    """The token after `gh <group>`, skipping flags. None if absent."""
+# gh global flags that consume the following token as their value, so the
+# subgroup scan skips past them (e.g. `gh -R owner/repo pr create`).
+GH_GLOBAL_VALUE_OPTS = {"-R", "--repo"}
+
+
+def gh_group_and_rest(toks):
+    """The gh subgroup token (pr/repo/release/issue) and the tokens after it,
+    skipping global flags and their values. (None, []) if absent."""
     try:
         i = toks.index("gh")
     except ValueError:
+        return None, []
+    j = i + 1
+    while j < len(toks):
+        t = toks[j]
+        if t in GH_GLOBAL_VALUE_OPTS:
+            j += 2
+            continue
+        if t.startswith("-"):
+            j += 1
+            continue
+        return t, toks[j + 1:]
+    return None, []
+
+
+def gh_subcommand(toks, group):
+    """The subcommand token after `gh <group>`, skipping flags. None if absent."""
+    found, rest = gh_group_and_rest(toks)
+    if found != group:
         return None
-    rest = toks[i + 1:]
-    if not rest or rest[0] != group:
-        return None
-    for t in rest[1:]:
+    for t in rest:
         if not t.startswith("-"):
             return t
     return None
 
 
-# Shell operators that separate one command from the next. Codex fires the hook
-# on the whole Bash command with no per-family decomposition, so self-dispatch
-# splits here and judges each segment on its own leading token. Best effort:
-# exotic quoting or command substitution can still hide a write. See ADR-0004.
-SHELL_SPLIT = re.compile(r"&&|\|\||;|\n|\|")
+# Shell tokens that separate or terminate one command from the next. A
+# punctuation-aware lexer detects these as their own tokens, so an operator
+# inside quotes stays part of its argument. Codex fires the hook on the whole
+# Bash call with no per-family decomposition, so self-dispatch finds the write
+# itself. Best effort: command substitution can still hide a write. See ADR-0004.
+SEGMENT_TOKENS = {"&&", "||", ";", "|", "&", "(", ")", "<", ">"}
 # Wrappers that precede the real command and should be skipped to find it.
-COMMAND_WRAPPERS = {"sudo", "command", "nohup", "time", "env", "nice", "stdbuf"}
+COMMAND_WRAPPERS = {
+    "sudo", "command", "nohup", "time", "env", "nice", "stdbuf", "xargs",
+}
 ENV_ASSIGN = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*=")
 # git subcommand to the family that guards it.
 GIT_SUBCOMMAND_FAMILY = {sub: fam for fam, sub in GIT_FAMILY_SUBCOMMAND.items()}
 GH_GROUP_FAMILY = {
     "pr": "gh-pr", "repo": "gh-repo", "release": "gh-release", "issue": "gh-issue",
 }
+
+
+def operator_tokens(text):
+    """Tokens for one command line with shell operators kept as their own tokens,
+    quote-aware. Falls back to a plain split on a lexer error."""
+    lex = shlex.shlex(text, posix=True, punctuation_chars=True)
+    lex.whitespace_split = True
+    try:
+        return list(lex)
+    except ValueError:
+        return text.split()
+
+
+def command_segments(command):
+    """Yield each command segment as a token list. Lines split first (a newline is
+    a separator the lexer treats as whitespace), then operators within a line, so
+    a `;` or `&` inside quotes never separates. A backslash-newline is a shell line
+    continuation, joined back so a write split across it is still one command."""
+    command = command.replace("\\\n", "")
+    for line in command.split("\n"):
+        segment = []
+        for tok in operator_tokens(line):
+            if tok in SEGMENT_TOKENS:
+                if segment:
+                    yield segment
+                segment = []
+            else:
+                segment.append(tok)
+        if segment:
+            yield segment
 
 
 def leading_token(toks):
@@ -133,29 +187,25 @@ def self_dispatch_deny(command):
     """Deny reason for any write segment in a full command, anchoring family
     detection to each segment's leading token. The path for a harness (Codex)
     that fires on the whole Bash call without the per-family `if` matcher."""
-    for segment in SHELL_SPLIT.split(command):
-        toks = tokens(segment)
-        if not toks:
-            continue
-        lead = leading_token(toks)
+    for seg in command_segments(command):
+        lead = leading_token(seg)
         if lead == "git":
-            family = GIT_SUBCOMMAND_FAMILY.get(git_subcommand(toks))
+            family = GIT_SUBCOMMAND_FAMILY.get(git_subcommand(seg))
         elif lead == "gh":
-            rest = toks[toks.index("gh") + 1:]
-            family = GH_GROUP_FAMILY.get(rest[0]) if rest else None
+            group, _ = gh_group_and_rest(seg)
+            family = GH_GROUP_FAMILY.get(group)
         else:
             continue
         if family:
-            reason = deny_reason(family, segment)
+            reason = deny_reason(family, seg)
             if reason:
                 return reason
     return None
 
 
-def deny_reason(family, command):
-    """The deny reason for a write command in a known family, or None to allow."""
-    toks = tokens(command)
-
+def deny_reason(family, toks):
+    """The deny reason for a write command in a known family, or None to allow.
+    `toks` is the command's shell tokens."""
     if family in GIT_FAMILY_SUBCOMMAND:
         # The harness matcher fires on a string prefix, so confirm the exact
         # subcommand: a read-only sibling (e.g. git merge-base) shares it but
@@ -209,7 +259,7 @@ def main():
         sys.exit(0)
 
     command = (data.get("tool_input") or {}).get("command") or ""
-    reason = self_dispatch_deny(command) if family == "auto" else deny_reason(family, command)
+    reason = self_dispatch_deny(command) if family == "auto" else deny_reason(family, tokens(command))
 
     if reason:
         print(json.dumps({

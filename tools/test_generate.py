@@ -58,6 +58,31 @@ class TestGenerateLayout(unittest.TestCase):
                 self.assertTrue(body.startswith("---"), name)
 
 
+class TestManifestPrune(unittest.TestCase):
+    def test_prunes_our_stale_skill_keeps_users_own(self):
+        with tempfile.TemporaryDirectory() as dst:
+            generate.generate_skills(ROOT, dst)
+            # A skill a prior version shipped, recorded in our manifest.
+            ghost = os.path.join(dst, "ghost-skill")
+            os.makedirs(ghost)
+            open(os.path.join(ghost, "SKILL.md"), "w").close()
+            manifest = os.path.join(dst, generate.MANIFEST)
+            with open(manifest, encoding="utf-8") as f:
+                names = json.load(f)
+            with open(manifest, "w", encoding="utf-8") as f:
+                json.dump(names + ["ghost-skill"], f)
+            # A skill the user authored themselves, not in our manifest.
+            mine = os.path.join(dst, "user-own")
+            os.makedirs(mine)
+            open(os.path.join(mine, "SKILL.md"), "w").close()
+
+            generate.generate_skills(ROOT, dst)  # reinstall
+
+            self.assertFalse(os.path.isdir(ghost), "our stale skill must be pruned")
+            self.assertTrue(os.path.isdir(mine), "the user's own skill must survive")
+            self.assertTrue(os.path.isdir(os.path.join(dst, "audit")))
+
+
 class TestInstallCodex(unittest.TestCase):
     def test_install_lays_down_full_layout(self):
         with tempfile.TemporaryDirectory() as home:
@@ -74,6 +99,32 @@ class TestInstallCodex(unittest.TestCase):
             self.assertIn(hooks_dst, cmd)
             # Global defaults seeded.
             self.assertTrue(os.path.isfile(os.path.join(home, ".config", "nitpickle", "policy.yaml")))
+
+    def test_install_preserves_existing_codex_hooks(self):
+        with tempfile.TemporaryDirectory() as home:
+            codex = os.path.join(home, ".codex")
+            os.makedirs(codex)
+            user_cfg = {
+                "hooks": {"PreToolUse": [
+                    {"matcher": "^Bash$", "hooks": [{"type": "command", "command": "my-own-hook.sh"}]},
+                ]},
+                "otherUserSetting": True,
+            }
+            with open(os.path.join(codex, "hooks.json"), "w", encoding="utf-8") as f:
+                json.dump(user_cfg, f)
+
+            generate.install_codex(ROOT, home)
+            generate.install_codex(ROOT, home)  # re-run: must stay idempotent
+
+            with open(os.path.join(codex, "hooks.json"), encoding="utf-8") as f:
+                merged = json.load(f)
+            text = json.dumps(merged)
+            # User content survives.
+            self.assertTrue(merged.get("otherUserSetting"))
+            self.assertIn("my-own-hook.sh", text)
+            # Our entries are present exactly once after two installs.
+            ours = [e for e in merged["hooks"]["PreToolUse"] if generate._entry_is_ours(e)]
+            self.assertEqual(len(ours), 2)
 
 
 class TestCodexHooksConfig(unittest.TestCase):

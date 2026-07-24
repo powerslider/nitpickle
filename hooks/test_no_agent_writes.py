@@ -147,6 +147,10 @@ class TestGhPr(unittest.TestCase):
     def test_pr_view_allowed(self):
         self.assertFalse(denied(run("gh-pr", "gh pr view 42 --json title")))
 
+    def test_pr_create_behind_global_repo_flag_denied(self):
+        # gh global flag before the subgroup must not defeat detection.
+        self.assertTrue(denied(run("gh-pr", "gh -R owner/repo pr create --fill")))
+
     def test_pr_diff_allowed(self):
         self.assertFalse(denied(run("gh-pr", "gh pr diff 42")))
 
@@ -220,6 +224,38 @@ class TestCodexSelfDispatch(unittest.TestCase):
     def test_env_override_allows_self_dispatch(self):
         r = run_auto("git commit -m x", env={"NITPICKLE_ALLOW_WRITES": "1"})
         self.assertFalse(denied(r))
+
+    # Segmenter regressions: operators inside quotes must not separate, and the
+    # previously-missed separators and gh global flag must be caught.
+    def test_quoted_operator_not_a_separator_allowed(self):
+        self.assertFalse(denied(run_auto('echo "a; git commit -m x"')))
+
+    def test_quoted_pipe_in_string_allowed(self):
+        self.assertFalse(denied(run_auto('echo "run | git push now"')))
+
+    def test_single_ampersand_chain_denied(self):
+        self.assertTrue(denied(run_auto("make test & git commit -m x")))
+
+    def test_xargs_git_push_denied(self):
+        self.assertTrue(denied(run_auto("echo main | xargs git push origin")))
+
+    def test_subshell_commit_denied(self):
+        self.assertTrue(denied(run_auto("(git commit -m x)")))
+
+    def test_newline_separated_commit_denied(self):
+        self.assertTrue(denied(run_auto("git status\ngit commit -m x")))
+
+    def test_gh_global_repo_flag_create_denied(self):
+        self.assertTrue(denied(run_auto("gh -R owner/repo pr create --fill")))
+
+    def test_redirect_after_commit_denied(self):
+        self.assertTrue(denied(run_auto("git commit -m x > out.log")))
+
+    def test_line_continuation_commit_denied(self):
+        # Backslash-newline is a bash line continuation, so this runs a single
+        # `git commit`. The segmenter splits on the newline, so the write must
+        # still be found across the continuation.
+        self.assertTrue(denied(run_auto("git commit\\\n -m x")))
 
 
 class TestEscapeHatchAndFailOpen(unittest.TestCase):

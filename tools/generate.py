@@ -16,6 +16,12 @@ import sys
 
 HOOK_SCRIPTS = ("no-agent-writes.py", "no-emdash-semicolon.py")
 
+# Records the skills a generation installed into a destination, so a re-install
+# can prune the ones no longer shipped without touching a user's own skills that
+# share the flat ~/.agents/skills directory. Lives in the destination, never the
+# repo source.
+MANIFEST = ".nitpickle-manifest"
+
 # Claude cross-reference token. The Codex form is `$name`, its invocation syntax.
 REF = re.compile(r"/nitpickle:([a-z0-9-]+)")
 
@@ -33,11 +39,24 @@ def skill_names(root):
     )
 
 
+def _read_manifest(dst):
+    """The skill names a prior generation recorded in `dst`, or [] if none."""
+    try:
+        with open(os.path.join(dst, MANIFEST), encoding="utf-8") as f:
+            data = json.load(f)
+    except (OSError, ValueError):
+        return []
+    return data if isinstance(data, list) else []
+
+
 def generate_skills(root, dst):
     """Render every canonical skill into `dst`, copying bundled files and
-    rewriting cross-references in markdown. Returns the skill names rendered."""
+    rewriting cross-references in markdown. Prunes skills a prior generation
+    installed here that are no longer shipped, scoped to the manifest so a user's
+    own skills in the same directory are untouched. Returns the names rendered."""
     skills_dir = os.path.join(root, "skills")
     names = skill_names(root)
+    os.makedirs(dst, exist_ok=True)
     for name in names:
         src_dir = os.path.join(skills_dir, name)
         out_dir = os.path.join(dst, name)
@@ -52,6 +71,13 @@ def generate_skills(root, dst):
                 content = to_codex_ref(content)
             with open(os.path.join(out_dir, entry), "w", encoding="utf-8") as f:
                 f.write(content)
+    for stale in set(_read_manifest(dst)) - set(names):
+        stale_dir = os.path.join(dst, stale)
+        if os.path.isdir(stale_dir):
+            shutil.rmtree(stale_dir)
+    with open(os.path.join(dst, MANIFEST), "w", encoding="utf-8") as f:
+        json.dump(names, f, indent=2)
+        f.write("\n")
     return names
 
 
@@ -75,7 +101,7 @@ def codex_hooks_config(hooks_dir):
                     }],
                 },
                 {
-                    "matcher": "^(apply_patch|Write|Edit|MultiEdit)$",
+                    "matcher": "^apply_patch$",
                     "hooks": [{
                         "type": "command",
                         "command": command("no-emdash-semicolon.py"),
@@ -87,14 +113,43 @@ def codex_hooks_config(hooks_dir):
     }
 
 
+def _entry_is_ours(entry):
+    """True if a PreToolUse entry runs one of our hook scripts, so a re-install
+    replaces it rather than duplicating, and a user's own entries are left alone."""
+    for hook in entry.get("hooks", []) if isinstance(entry, dict) else []:
+        command = hook.get("command", "")
+        if any(script in command for script in HOOK_SCRIPTS):
+            return True
+    return False
+
+
 def generate_hooks_config(root, dst, hooks_dir=None):
-    """Write the Codex hooks.json into `dst`, pointing at `hooks_dir` (the
-    installed hook scripts, absolute). Returns the config dict."""
+    """Merge the Codex hooks config into any existing `dst/hooks.json`, pointing
+    at `hooks_dir` (the installed hook scripts, absolute). The user's own hooks
+    and other keys are preserved, our entries are replaced not duplicated on a
+    re-run. Returns the written config dict."""
     if hooks_dir is None:
         hooks_dir = os.path.join(root, "hooks")
     os.makedirs(dst, exist_ok=True)
-    config = codex_hooks_config(os.path.abspath(hooks_dir))
-    with open(os.path.join(dst, "hooks.json"), "w", encoding="utf-8") as f:
+    ours = codex_hooks_config(os.path.abspath(hooks_dir))
+    path = os.path.join(dst, "hooks.json")
+
+    config = {}
+    if os.path.exists(path):
+        try:
+            with open(path, encoding="utf-8") as f:
+                config = json.load(f)
+        except (OSError, ValueError):
+            config = {}
+    if not isinstance(config, dict):
+        config = {}
+
+    hooks = config.setdefault("hooks", {})
+    existing = hooks.get("PreToolUse")
+    kept = [e for e in existing if not _entry_is_ours(e)] if isinstance(existing, list) else []
+    hooks["PreToolUse"] = kept + ours["hooks"]["PreToolUse"]
+
+    with open(path, "w", encoding="utf-8") as f:
         json.dump(config, f, indent=2)
         f.write("\n")
     return config

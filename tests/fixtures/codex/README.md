@@ -2,8 +2,8 @@
 
 The assumed Codex hook contract that the harness-neutral hooks are built and
 tested against. These shapes are the spec. The contract tests in `hooks/` assert
-the scripts behave correctly against them, and a real-`codex` manual smoke
-confirms the shapes are faithful (HITL acceptance, recorded in the plan).
+the scripts behave correctly against them, and a real-`codex` smoke run
+confirms the shapes are faithful before they are trusted.
 
 Source: https://developers.openai.com/codex/hooks and
 https://developers.openai.com/codex/config-reference. Pending the smoke, treat
