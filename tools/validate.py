@@ -22,6 +22,8 @@ Checks:
   9. Verbatim canonical blocks match their canonical home byte for byte.
   10. Skill bodies carry no Claude-Code-only token, so the canonical source stays
      portable to Codex.
+  11. The committed Codex marketplace bundle under .agents/plugins matches a fresh
+     regeneration, so a hand edit to the vendored distribution is caught.
 
 PyYAML sharpens check 1 and 2 when installed (it is a CI dependency, not a
 runtime one). Without it the checks degrade to regex on the raw lines.
@@ -31,6 +33,7 @@ import os
 import re
 import subprocess
 import sys
+import tempfile
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import generate  # noqa: E402
@@ -267,6 +270,39 @@ def check_codex_references(root, skill_names):
                     fail(f"{rel}: Codex rewrite lost reference ${ref}")
 
 
+def _bundle_bytes(base):
+    """Map each file under `base` to its bytes, keyed by relative path."""
+    out = {}
+    for dirpath, _, names in os.walk(base):
+        for n in names:
+            full = os.path.join(dirpath, n)
+            with open(full, "rb") as f:
+                out[os.path.relpath(full, base)] = f.read()
+    return out
+
+
+def check_codex_bundle_drift(root):
+    """Check 11. The committed Codex marketplace bundle under .agents/plugins must
+    equal a fresh regeneration from the canonical source. The committed skill copies
+    are guarded ONLY by this check, checks 3b and 10 scan canonical skills/ only, so
+    a hand edit to the committed tree is caught here. Fix with `make codex-dist`."""
+    committed = os.path.join(root, ".agents", "plugins")
+    if not os.path.isdir(committed):
+        fail("no committed Codex bundle at .agents/plugins, run `make codex-dist`")
+        return
+    with tempfile.TemporaryDirectory() as tmp:
+        generate.emit_codex_marketplace(root, tmp)
+        fresh = _bundle_bytes(os.path.join(tmp, ".agents", "plugins"))
+    have = _bundle_bytes(committed)
+    for rel in sorted(set(have) | set(fresh)):
+        if rel not in have:
+            fail(f".agents/plugins is missing {rel}, run `make codex-dist`")
+        elif rel not in fresh:
+            fail(f".agents/plugins has a stale {rel}, run `make codex-dist`")
+        elif have[rel] != fresh[rel]:
+            fail(f".agents/plugins/{rel} is stale vs canonical source, run `make codex-dist`")
+
+
 def check_readme_count(root, skill_names):
     readme = read(os.path.join(root, "README.md"))
     expected = NUMBER_WORDS.get(len(skill_names), str(len(skill_names)))
@@ -382,6 +418,7 @@ def main():
     check_collision_phrases(root, skill_names)
     check_glossary_terms(root)
     check_canonical_blocks(root)
+    check_codex_bundle_drift(root)
 
     for w in warnings:
         print(f"warning: {w}")

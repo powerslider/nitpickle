@@ -7,21 +7,31 @@ release (`make bump VERSION=x.y.z`), and add the entry here.
 ## 0.10.0
 
 - NitPickle is harness-agnostic. The skills and hooks are authored once and
-  install on OpenAI Codex as well as Claude Code. `make install-codex` generates
-  the Codex layout (`.agents/skills`, a `.codex/hooks.json`, seeded global
-  defaults) into your home. Generated artifacts are never committed, they
-  generate on demand (see ADR-0010).
+  install on OpenAI Codex as well as Claude Code, from one canonical source.
+- Codex marketplace. The repo carries a committed Codex marketplace bundle under
+  `.agents/plugins`, so `codex plugin marketplace add powerslider/nitpickle` then
+  `codex plugin add nitpickle@nitpickle` installs the skills. The bundle is
+  emitted by `make codex-dist` and held to the
+  canonical source by validator check 11, the one committed generated artifact
+  (ADR-0010). The install layout (`~/.agents/skills`, the Codex hooks config) still
+  generates on demand via `make install-codex`.
 - `tools/generate.py` renders the Codex layout from the canonical source,
-  rewriting `/nitpickle:<name>` cross-references to Codex `$name` invocation syntax.
-  Validator check 3b resolves every rewritten `$name`, and check 10 keeps
-  Claude-only tokens out of the canonical skills.
-- The two Python hooks became harness-neutral. The Write guardrail self-dispatches
-  on Codex (it splits the command on shell operators and anchors to each
-  segment's leading token, fixing a chained-commit false negative and a
-  string-mention false positive). The house-style hook parses a Codex apply_patch
-  body per file. The deny contract was already shared.
-- Honest limits, recorded in ADR-0010: the guardrail is best-effort on Codex
-  without the harness pre-filter, and house style is weaker on a Codex
+  rewriting `/nitpickle:<name>` cross-references to Codex `$name`. Check 3b resolves
+  every rewritten `$name`, and check 10 keeps Claude-only tokens out of the skills.
+- The write guardrail installs separately on Codex, which does not run
+  plugin-bundled hooks. The plugin ships the installer and the two hook scripts, so
+  a plugin user runs `generate.py --install-hooks` from the plugin cache and trusts
+  the hooks once with `/hooks`. `make install-codex` does the full install from a
+  clone.
+- The two Python hooks are harness-neutral. The Write guardrail self-dispatches on
+  Codex, splitting the command with a quote-aware lexer, anchoring to each
+  segment's leading token, and joining backslash-newline continuations, closing
+  chained-commit and line-continuation bypasses and a string-mention false
+  positive. The house-style hook parses a Codex apply_patch body per file. The
+  installer prunes skills it no longer ships on a re-install, scoped to its own
+  manifest.
+- Honest limits, recorded in ADR-0010: the guardrail is best-effort on Codex and
+  dormant until the hooks are trusted, and house style is weaker on a Codex
   apply_patch edit.
 
 ## 0.9.1

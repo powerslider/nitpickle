@@ -2,10 +2,11 @@
 
 How the NitPickle plugin works. The scope is harness-agnostic: skills, a
 convention layer, two hooks, and this repo's own proof tooling, authored once and
-installed on Claude Code or Codex. The Codex layout is generated on demand from
-the canonical source (see ADR-0010). No services, no database, no runtime, no
-server. Everything runs inside the agent against a local branch or, for PR
-review, a local checkout via `gh`.
+installed on Claude Code or Codex. The Codex install layout is generated on demand
+from the canonical source, and the Codex marketplace bundle under `.agents/plugins`
+is committed for `codex plugin add` (see ADR-0010). No services, no database, no
+runtime, no server. Everything runs inside the agent against a local branch or, for
+PR review, a local checkout via `gh`.
 
 ## Shape
 
@@ -20,6 +21,20 @@ hooks/                       house-style guard (PreToolUse)
 CONTEXT.md + docs/adr/       glossary + decisions (per repo)
 tools/ + .github/workflows/  this repo's own consistency proof seam
 ```
+
+## Distribution
+
+Two harnesses install from one canonical source.
+
+- **Claude Code.** The repo is its own marketplace (`.claude-plugin/`). A `/plugin
+  install` activates the skills and the hooks together.
+- **Codex.** Two surfaces. The committed marketplace bundle under `.agents/plugins`
+  (emitted by `make codex-dist`, held to the source by validator check 11) lets
+  `codex plugin add nitpickle@nitpickle` install the skills with `$name` refs. The
+  Write guardrail cannot ship in a Codex plugin, Codex does not run plugin-bundled
+  hooks, so it installs separately via `generate.py --install-hooks` and is trusted
+  once with `/hooks`. `make install-codex` does the full install, skills plus
+  guardrail, from a clone.
 
 ## Principles
 

@@ -126,6 +126,18 @@ class TestInstallCodex(unittest.TestCase):
             ours = [e for e in merged["hooks"]["PreToolUse"] if generate._entry_is_ours(e)]
             self.assertEqual(len(ours), 2)
 
+    def test_install_hooks_wires_guardrail_without_skills(self):
+        # The plugin-user path: guardrail only, no ~/.agents/skills.
+        with tempfile.TemporaryDirectory() as home:
+            hooks_dst = generate.install_hooks(ROOT, home)
+            for script in generate.HOOK_SCRIPTS:
+                self.assertTrue(os.path.isfile(os.path.join(hooks_dst, script)))
+            with open(os.path.join(home, ".codex", "hooks.json"), encoding="utf-8") as f:
+                cfg = json.load(f)
+            ours = [e for e in cfg["hooks"]["PreToolUse"] if generate._entry_is_ours(e)]
+            self.assertEqual(len(ours), 2)
+            self.assertFalse(os.path.isdir(os.path.join(home, ".agents", "skills")))
+
 
 class TestCodexHooksConfig(unittest.TestCase):
     def setUp(self):
@@ -161,6 +173,63 @@ class TestCodexHooksConfig(unittest.TestCase):
                 cmd = entry["hooks"][0]["command"]
                 script = cmd.split('"')[1]
                 self.assertTrue(os.path.isfile(script), script)
+
+
+class TestCodexMarketplace(unittest.TestCase):
+    def test_emits_bundle_with_manifests_and_rewritten_skills(self):
+        with tempfile.TemporaryDirectory() as dst:
+            plugins = generate.emit_codex_marketplace(ROOT, dst)
+
+            with open(os.path.join(plugins, "marketplace.json"), encoding="utf-8") as f:
+                mp = json.load(f)
+            self.assertEqual(mp["name"], "nitpickle")
+            self.assertEqual(len(mp["plugins"]), 1)
+            entry = mp["plugins"][0]
+            self.assertEqual(
+                entry["source"], {"source": "local", "path": "./.agents/plugins/nitpickle"}
+            )
+            self.assertIn("policy", entry)
+
+            manifest = os.path.join(plugins, "nitpickle", ".codex-plugin", "plugin.json")
+            with open(manifest, encoding="utf-8") as f:
+                pj = json.load(f)
+            for field in ("name", "version", "description"):
+                self.assertTrue(pj.get(field), field)
+            self.assertEqual(pj["version"], generate._claude_manifest(ROOT)["version"])
+            self.assertEqual(pj["skills"], "./skills/")
+
+            skills_dir = os.path.join(plugins, "nitpickle", "skills")
+            for name in generate.skill_names(ROOT):
+                skill = os.path.join(skills_dir, name, "SKILL.md")
+                self.assertTrue(os.path.isfile(skill), name)
+                with open(skill, encoding="utf-8") as f:
+                    self.assertNotIn("/nitpickle:", f.read())
+            # No install-time pruning state leaks into the distribution.
+            self.assertFalse(os.path.exists(os.path.join(skills_dir, generate.MANIFEST)))
+
+    def test_bundle_ships_a_working_guardrail_installer(self):
+        # A Codex plugin ships every file in the plugin dir, so the bundle carries
+        # the installer and hooks, and `install_hooks` runs with the bundle as root.
+        with tempfile.TemporaryDirectory() as dst:
+            plugins = generate.emit_codex_marketplace(ROOT, dst)
+            plugin = os.path.join(plugins, "nitpickle")
+            self.assertTrue(os.path.isfile(os.path.join(plugin, "tools", "generate.py")))
+            for script in generate.HOOK_SCRIPTS:
+                self.assertTrue(os.path.isfile(os.path.join(plugin, "hooks", script)))
+            with tempfile.TemporaryDirectory() as home:
+                generate.install_hooks(plugin, home)
+                for script in generate.HOOK_SCRIPTS:
+                    self.assertTrue(os.path.isfile(
+                        os.path.join(home, ".config", "nitpickle", "hooks", script)))
+
+    def test_reemit_prunes_a_removed_skill(self):
+        with tempfile.TemporaryDirectory() as dst:
+            plugins = generate.emit_codex_marketplace(ROOT, dst)
+            ghost = os.path.join(plugins, "nitpickle", "skills", "ghost")
+            os.makedirs(ghost)
+            open(os.path.join(ghost, "SKILL.md"), "w").close()
+            generate.emit_codex_marketplace(ROOT, dst)  # re-emit is an exact mirror
+            self.assertFalse(os.path.isdir(ghost))
 
 
 if __name__ == "__main__":

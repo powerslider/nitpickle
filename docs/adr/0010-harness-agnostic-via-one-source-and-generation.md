@@ -24,10 +24,14 @@ Write or Edit.
 Author once under `skills/` and `hooks/`, and generate the Codex layout on
 demand. `tools/generate.py` renders `.agents/skills/` and a `.codex/hooks.json`,
 rewriting `/nitpickle:<name>` cross-references to Codex `$name` invocation syntax.
-Generated artifacts are never committed, they generate to a temp tree for tests
-and to `~/.agents/skills` at install. The validator gains check 3b (every Codex
-`$name` resolves, no namespace token survives) and check 10 (no Claude-only token in
-a canonical skill body).
+Generated install artifacts are never committed, they generate to a temp tree for
+tests and to `~/.agents/skills` at install. The one committed exception is the
+Codex marketplace distribution bundle under `.agents/plugins/`, which a remote
+`codex plugin add` can only read from a git commit, so it is committed and held to
+the canonical source by a regenerate-and-diff drift check (see the marketplace
+distribution plan). The validator gains check 3b (every Codex `$name` resolves, no
+namespace token survives) and check 10 (no Claude-only token in a canonical skill
+body).
 
 The two Python hooks stay the single guardrail logic. On Codex the write
 guardrail self-dispatches: it splits the command on shell operators and anchors
@@ -49,12 +53,24 @@ Codex apply_patch body per file in addition to the Write and Edit shapes.
   open more often than for a Write or Edit. The character checks still hold.
 - The apply_patch `tool_input` shape is captured as a fixture under
   `tests/fixtures/codex/`, confirmed by a manual smoke, not by CI.
+- The Codex marketplace distribution bundle (`.agents/plugins/`) is the sole
+  committed generated artifact, guarded by a regenerate-and-diff drift check plus
+  check 3b for rewrite correctness. Install artifacts (`~/.agents/skills`,
+  `~/.codex/hooks.json`) stay generate-on-demand. The write guardrail is never part
+  of the bundle, Codex does not run plugin-bundled hooks, so it installs separately
+  via `generate.py --install-hooks` and is trusted through `/hooks`.
 
 ## Alternatives considered
 
-- **Vendor the generated Codex artifacts.** Rejected. Committed generated files
-  drift, bloat diffs, and need a regenerate-and-recommit on every skill edit. A
-  diff-against-committed check proves equality, not correctness.
+- **Vendor the generated Codex install artifacts.** Rejected. Committed generated
+  files drift, bloat diffs, and need a regenerate-and-recommit on every skill edit.
+  A diff-against-committed check proves equality, not correctness. This rejection
+  is scoped to the install artifacts. The marketplace distribution bundle is the
+  bounded exception, it must be committed for a remote `codex plugin add` to read
+  it, its drift is caught by the regenerate-and-diff check, and check 3b proves
+  rewrite correctness independently, answering the equality-not-correctness concern
+  for that case. A dedicated dist branch or sibling repo was considered instead and
+  rejected, committed default-branch registries are the ecosystem norm (wshobson).
 - **Shared in-place layout via symlinks.** Rejected. The harnesses scan different
   paths and hook configs, and the cross-reference, tool-name, and wiring
   differences need transformation regardless, which symlinks do not provide.

@@ -20,6 +20,9 @@ tests/fixtures/ui-proof-app/.playwright/
 # Stray Playwright output if a run is launched from another cwd
 test-results/
 
-# Generated Codex layout (generate on demand, never committed)
-.agents/
+# Generated Codex install layout (generate on demand, never committed).
+# The committed exception is the marketplace distribution bundle under
+# .agents/plugins/, which a remote `codex plugin add` reads from git (ADR-0010).
+.agents/*
+!.agents/plugins/
 .codex/
