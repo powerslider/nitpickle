@@ -5,25 +5,27 @@ Run from the repo root (or pass the root as the first argument):
 
     python3 tools/validate.py [root]
 
-Checks:
-  1. Every skills/*/SKILL.md has frontmatter whose name matches its directory.
+Skills are authored per harness under skills/claude-code and skills/codex, each a
+full tree hand-optimized for its harness. Checks:
+  1. Every skills/<harness>/*/SKILL.md has frontmatter whose name matches its dir.
   2. The parsed description matches its raw line, catching silent YAML comment
      truncation from an unquoted hash (valid YAML, invisible to a parse check).
-  3. Every /nitpickle:<name> reference resolves to a shipped skill.
-  3b. The Codex rewrite of every /nitpickle:x yields a resolvable `$x` with no
-     surviving namespace token, so a generator bug cannot ship a wrong chain.
-  4. The README's written-out skill count matches the skills directory.
-  5. plugin.json and marketplace.json versions match.
-  6. No banned characters in tracked files: literal em or en dash anywhere,
+  3. References resolve per harness: a claude-code /nitpickle:<name> resolves to a
+     shipped skill, and a codex skill carries no /nitpickle: token and every
+     $nitpickle:<name> resolves.
+  4. No bare $<skillname> in any markdown, the Codex invocation is the namespaced
+     $nitpickle:<name>, so a doc example cannot ship a token that fails to resolve.
+  5. The README's written-out skill count matches the skills directory.
+  6. The Claude and Codex plugin manifest versions all match.
+  7. No banned characters in tracked files: literal em or en dash anywhere,
      semicolons and HTML-entity dashes in markdown prose (code stripped with
      the hook's own semantics, unmatched fences fail open with a warning).
-  7. Trigger collision phrases appear in at most one skill description.
-  8. Every load-bearing glossary term has a CONTEXT.md entry.
-  9. Verbatim canonical blocks match their canonical home byte for byte.
-  10. Skill bodies carry no Claude-Code-only token, so the canonical source stays
-     portable to Codex.
-  11. The committed Codex marketplace bundle under .agents/plugins matches a fresh
-     regeneration, so a hand edit to the vendored distribution is caught.
+  8. Trigger collision phrases appear in at most one skill description.
+  9. Every load-bearing glossary term has a CONTEXT.md entry.
+  10. Verbatim canonical blocks match their canonical home byte for byte, in both
+     harness trees, so a shared block cannot drift in one tree.
+  11. The resolution block, which is harness-specific, is identical across every
+     skill within a tree, so it cannot drift within a tree.
 
 PyYAML sharpens check 1 and 2 when installed (it is a CI dependency, not a
 runtime one). Without it the checks degrade to regex on the raw lines.
@@ -33,15 +35,13 @@ import os
 import re
 import subprocess
 import sys
-import tempfile
-
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import generate  # noqa: E402
 
 try:
     import yaml
 except ImportError:
     yaml = None
+
+HARNESSES = ("claude-code", "codex")
 
 EM_DASH = chr(0x2014)
 EN_DASH = chr(0x2013)
@@ -59,45 +59,47 @@ NUMBER_WORDS = {
     13: "thirteen", 14: "fourteen",
 }
 
-# (block_file, canonical_file, marker) triples whose marker-delimited content
-# must match byte for byte. The canonical homes live in .nitpickle/README.md.
-# commit-msg carries a reduced variant registered against itself, which asserts
-# presence of the block without a second copy to compare.
+# Skills that carry the shared resolution and trust blocks. Their marker-delimited
+# content must match the canonical home byte for byte, in every harness tree.
 FULL_BLOCK_SKILLS = (
     "bootstrap", "design-spec", "feature-plan", "grill", "handoff",
     "preflight", "polish", "resolve-conflicts", "resume", "review-pr",
     "test-spec", "audit", "ui-proof",
 )
-CANONICAL_BLOCKS = [
-    (f"skills/{name}/SKILL.md", ".nitpickle/README.md", marker)
-    for name in FULL_BLOCK_SKILLS
-    for marker in ("<!-- nitpickle:resolution -->", "<!-- nitpickle:trust -->")
-] + [
-    (
-        "skills/commit-msg/SKILL.md",
-        "skills/commit-msg/SKILL.md",
-        "<!-- nitpickle:conventions-commit-msg -->",
-    ),
-    (
-        "skills/preflight/SKILL.md",
-        "docs/ARCHITECTURE.md",
-        "<!-- nitpickle:finding-schema -->",
-    ),
-    (
-        "skills/review-pr/REVIEW-FORMAT.md",
-        "docs/ARCHITECTURE.md",
-        "<!-- nitpickle:finding-schema -->",
-    ),
-    (
-        "skills/ui-proof/SKILL.md",
-        "docs/ARCHITECTURE.md",
-        "<!-- nitpickle:finding-schema -->",
-    ),
-]
+# The trust block is harness-neutral and byte-synced to a shared home. The
+# resolution block is harness-specific (its config path differs), so it is checked
+# tree-internally instead (check_resolution_blocks), not synced here.
+CANONICAL_BLOCKS = []
+for _h in HARNESSES:
+    for _name in FULL_BLOCK_SKILLS:
+        CANONICAL_BLOCKS.append(
+            (f"skills/{_h}/{_name}/SKILL.md", ".nitpickle/README.md", "<!-- nitpickle:trust -->")
+        )
+    CANONICAL_BLOCKS += [
+        (
+            f"skills/{_h}/commit-msg/SKILL.md",
+            f"skills/{_h}/commit-msg/SKILL.md",
+            "<!-- nitpickle:conventions-commit-msg -->",
+        ),
+        (
+            f"skills/{_h}/preflight/SKILL.md",
+            "docs/ARCHITECTURE.md",
+            "<!-- nitpickle:finding-schema -->",
+        ),
+        (
+            f"skills/{_h}/review-pr/REVIEW-FORMAT.md",
+            "docs/ARCHITECTURE.md",
+            "<!-- nitpickle:finding-schema -->",
+        ),
+        (
+            f"skills/{_h}/ui-proof/SKILL.md",
+            "docs/ARCHITECTURE.md",
+            "<!-- nitpickle:finding-schema -->",
+        ),
+    ]
 
 # Load-bearing vocabulary the skills use. Each must have a glossary entry in
-# CONTEXT.md (a "- **Term**" bullet). Curated by hand, free-prose extraction
-# cannot work reliably.
+# CONTEXT.md (a "- **Term**" bullet). Curated by hand.
 LOAD_BEARING_TERMS = (
     "Finding", "Refinement", "Proof", "Proof-gated severity", "Feedback loop",
     "Proof engine", "Proof surface", "Kept test", "Fail-demonstration",
@@ -108,8 +110,7 @@ LOAD_BEARING_TERMS = (
     "Convergence", "Plan gate", "AFK", "HITL", "Handoff", "Conflict",
 )
 
-# Trigger phrases that must appear in at most one skill description, so a
-# request like "plan this" is never claimed by two skills at once.
+# Trigger phrases that must appear in at most one skill description.
 COLLISION_PHRASES = (
     '"plan this"',
     "stress-test",
@@ -167,48 +168,52 @@ def strip_code(text):
     return prose
 
 
-def check_skills(root):
-    skills_dir = os.path.join(root, "skills")
+def check_skills(root, harness):
+    skills_dir = os.path.join(root, "skills", harness)
     names = []
     for d in sorted(os.listdir(skills_dir)):
-        skill_md = os.path.join(skills_dir, d, "SKILL.md")
+        sdir = os.path.join(skills_dir, d)
+        if not os.path.isdir(sdir):
+            continue
+        prefix = f"skills/{harness}/{d}"
+        skill_md = os.path.join(sdir, "SKILL.md")
         if not os.path.isfile(skill_md):
-            fail(f"skills/{d}/ has no SKILL.md")
+            fail(f"{prefix}/ has no SKILL.md")
             continue
         fm = frontmatter(read(skill_md))
         if fm is None:
-            fail(f"skills/{d}/SKILL.md has no frontmatter")
+            fail(f"{prefix}/SKILL.md has no frontmatter")
             continue
         raw_desc = raw_scalar(fm, "description")
         if yaml:
             try:
                 data = yaml.safe_load(fm)
             except yaml.YAMLError as exc:
-                fail(f"skills/{d}/SKILL.md frontmatter does not parse: {exc}")
+                fail(f"{prefix}/SKILL.md frontmatter does not parse: {exc}")
                 continue
             name = data.get("name")
             desc = data.get("description")
             if name != d:
-                fail(f"skills/{d}/SKILL.md name '{name}' does not match its directory")
+                fail(f"{prefix}/SKILL.md name '{name}' does not match its directory")
             if not desc:
-                fail(f"skills/{d}/SKILL.md has no description")
+                fail(f"{prefix}/SKILL.md has no description")
             elif raw_desc and desc.strip() != raw_desc:
                 fail(
-                    f"skills/{d}/SKILL.md description is truncated by YAML "
+                    f"{prefix}/SKILL.md description is truncated by YAML "
                     f"(unquoted hash?): parsed text differs from the raw line"
                 )
         else:
             name = raw_scalar(fm, "name")
             if name != d:
-                fail(f"skills/{d}/SKILL.md name '{name}' does not match its directory")
+                fail(f"{prefix}/SKILL.md name '{name}' does not match its directory")
             if raw_desc and " #" in raw_desc:
                 fail(
-                    f"skills/{d}/SKILL.md description contains an unquoted hash, "
+                    f"{prefix}/SKILL.md description contains an unquoted hash, "
                     f"YAML will truncate it (install pyyaml for the exact check)"
                 )
             if raw_desc and not raw_desc.startswith(('"', "'")) and ": " in raw_desc:
                 fail(
-                    f"skills/{d}/SKILL.md description contains a colon-space in an "
+                    f"{prefix}/SKILL.md description contains a colon-space in an "
                     f"unquoted scalar, strict YAML rejects it (install pyyaml for "
                     f"the exact check)"
                 )
@@ -216,126 +221,69 @@ def check_skills(root):
     return names
 
 
-def check_references(root, skill_names, files):
-    pattern = re.compile(r"/nitpickle:([a-z0-9-]+)")
+def check_references(root, skills, files):
+    """Check 3. A claude-code /nitpickle:<name> resolves to a shipped skill. A codex
+    skill invokes as the plugin-namespaced $nitpickle:<name>, so it carries no bare
+    /nitpickle: token and every $nitpickle:<name> must resolve."""
+    claude_pat = re.compile(r"/nitpickle:([a-z0-9-]+)")
+    codex_pat = re.compile(r"\$nitpickle:([a-z0-9-]+)")
     for rel in files:
         if not rel.endswith(".md"):
             continue
-        for ref in pattern.findall(read(os.path.join(root, rel))):
-            if ref not in skill_names:
+        norm = rel.replace("\\", "/")
+        text = read(os.path.join(root, rel))
+        if norm.startswith("skills/codex/"):
+            if "/nitpickle:" in text:
+                fail(f"{rel} carries a /nitpickle: reference, codex skills use $nitpickle:name")
+            for ref in codex_pat.findall(text):
+                if ref not in skills["codex"]:
+                    fail(f"{rel} references $nitpickle:{ref}, which does not exist")
+            continue
+        for ref in claude_pat.findall(text):
+            if ref not in skills["claude-code"]:
                 fail(f"{rel} references /nitpickle:{ref}, which does not exist")
 
 
-# Tokens that name a Claude-Code-only mechanism. Banned in canonical skill
-# bodies, which are the shared source for every harness. Naming both harnesses
-# for contrast (CLAUDE.md on Claude Code, AGENTS.md on Codex) is fine.
-HARNESS_SPECIFIC_TOKENS = ("`Explore` agent", "${CLAUDE_PLUGIN_ROOT}")
-
-
-def check_harness_neutral_skills(root):
-    """Check 10. Fail on a Claude-Code-only token in a canonical skill body."""
-    skills_dir = os.path.join(root, "skills")
-    for name in sorted(os.listdir(skills_dir)):
-        sdir = os.path.join(skills_dir, name)
-        if not os.path.isdir(sdir):
+def check_bare_skill_tokens(root, skills, files):
+    """Check 4. A bare $<skillname> is a wrong Codex reference, the invocation is
+    the plugin-namespaced $nitpickle:<name>. Catch it in any tracked markdown so a
+    doc example cannot ship a token that silently fails to resolve."""
+    names = sorted(set(skills["codex"]) | set(skills["claude-code"]))
+    pattern = re.compile(r"\$(" + "|".join(re.escape(n) for n in names) + r")\b")
+    for rel in files:
+        if not rel.endswith(".md"):
             continue
-        for entry in sorted(os.listdir(sdir)):
-            if not entry.endswith(".md"):
-                continue
-            text = read(os.path.join(sdir, entry))
-            for token in HARNESS_SPECIFIC_TOKENS:
-                if token in text:
-                    fail(f"skills/{name}/{entry}: Claude-only token {token!r}, keep skills portable")
+        for m in pattern.finditer(read(os.path.join(root, rel))):
+            fail(f"{rel} uses a bare ${m.group(1)}, the Codex invocation is $nitpickle:{m.group(1)}")
 
 
-def check_codex_references(root, skill_names):
-    """Check 3b. The generator rewrites /nitpickle:x to Codex `$x`. Assert no
-    namespace token survives the rewrite and every rewritten reference resolves,
-    so a generator bug cannot ship a silently-wrong Codex keep-chain."""
-    skills_dir = os.path.join(root, "skills")
-    for name in sorted(os.listdir(skills_dir)):
-        sdir = os.path.join(skills_dir, name)
-        if not os.path.isdir(sdir):
-            continue
-        for entry in sorted(os.listdir(sdir)):
-            if not entry.endswith(".md"):
-                continue
-            rel = f"skills/{name}/{entry}"
-            canonical = read(os.path.join(sdir, entry))
-            rendered = generate.to_codex_ref(canonical)
-            if "/nitpickle:" in rendered:
-                fail(f"{rel}: a /nitpickle: reference survived the Codex rewrite")
-            for ref in re.findall(r"/nitpickle:([a-z0-9-]+)", canonical):
-                if ref in skill_names and f"${ref}" not in rendered:
-                    fail(f"{rel}: Codex rewrite lost reference ${ref}")
-
-
-def _bundle_bytes(base):
-    """Map each file under `base` to its bytes, keyed by relative path."""
-    out = {}
-    for dirpath, _, names in os.walk(base):
-        for n in names:
-            full = os.path.join(dirpath, n)
-            with open(full, "rb") as f:
-                out[os.path.relpath(full, base)] = f.read()
-    return out
-
-
-def check_codex_bundle_drift(root):
-    """Check 11. The committed Codex marketplace bundle under .agents/plugins must
-    equal a fresh regeneration from the canonical source. The committed skill copies
-    are guarded ONLY by this check, checks 3b and 10 scan canonical skills/ only, so
-    a hand edit to the committed tree is caught here. Fix with `make codex-dist`."""
-    committed = os.path.join(root, ".agents", "plugins")
-    if not os.path.isdir(committed):
-        fail("no committed Codex bundle at .agents/plugins, run `make codex-dist`")
-        return
-    with tempfile.TemporaryDirectory() as tmp:
-        generate.emit_codex_marketplace(root, tmp)
-        fresh = _bundle_bytes(os.path.join(tmp, ".agents", "plugins"))
-    have = _bundle_bytes(committed)
-    for rel in sorted(set(have) | set(fresh)):
-        if rel not in have:
-            fail(f".agents/plugins is missing {rel}, run `make codex-dist`")
-        elif rel not in fresh:
-            fail(f".agents/plugins has a stale {rel}, run `make codex-dist`")
-        elif have[rel] != fresh[rel]:
-            fail(f".agents/plugins/{rel} is stale vs canonical source, run `make codex-dist`")
-
-
-def check_readme_count(root, skill_names):
+def check_readme_count(root, count):
     readme = read(os.path.join(root, "README.md"))
-    expected = NUMBER_WORDS.get(len(skill_names), str(len(skill_names)))
-    # Case-insensitive, with an optional adjective between the number word and
-    # "skills" so "Seven composable skills" is validated, not just "seven skills".
+    expected = NUMBER_WORDS.get(count, str(count))
     pattern = r"\b(" + "|".join(NUMBER_WORDS.values()) + r")(?: \w+)? skills\b"
     found = re.findall(pattern, readme, re.IGNORECASE)
     for word in found:
         if word.lower() != expected:
-            fail(
-                f"README says '{word} skills' but skills/ ships "
-                f"{len(skill_names)} ({expected})"
-            )
+            fail(f"README says '{word} skills' but skills ship {count} ({expected})")
     if not found:
         warn("README never states the skill count in words")
 
 
 def check_versions(root):
-    plugin = json.loads(read(os.path.join(root, ".claude-plugin", "plugin.json")))
-    marketplace = json.loads(
-        read(os.path.join(root, ".claude-plugin", "marketplace.json"))
-    )
-    pv = plugin.get("version")
-    mv = marketplace["plugins"][0].get("version")
-    if pv != mv:
-        fail(f"version mismatch: plugin.json {pv} vs marketplace.json {mv}")
+    versions = {
+        ".claude-plugin/plugin.json":
+            json.loads(read(os.path.join(root, ".claude-plugin", "plugin.json"))).get("version"),
+        ".claude-plugin/marketplace.json":
+            json.loads(read(os.path.join(root, ".claude-plugin", "marketplace.json")))["plugins"][0].get("version"),
+        ".codex-plugin/plugin.json":
+            json.loads(read(os.path.join(root, ".codex-plugin", "plugin.json"))).get("version"),
+    }
+    if len(set(versions.values())) > 1:
+        fail(f"version mismatch across plugin manifests: {versions}")
 
 
 def check_banned_characters(root, files):
     for rel in files:
-        # Transient artifacts (handoffs, review packets) embed captured code we
-        # do not author or maintain, so house style does not apply to them.
-        # See .nitpickle/preferences.md.
         norm = rel.replace("\\", "/")
         if norm.startswith(("docs/handoffs/", "docs/reviews/", "docs/audits/")):
             continue
@@ -358,11 +306,11 @@ def check_banned_characters(root, files):
                     fail(f"{rel} contains {entity} in markdown prose")
 
 
-def check_collision_phrases(root, skill_names):
+def check_collision_phrases(root, claude_skills):
     for phrase in COLLISION_PHRASES:
         owners = []
-        for name in skill_names:
-            fm = frontmatter(read(os.path.join(root, "skills", name, "SKILL.md")))
+        for name in claude_skills:
+            fm = frontmatter(read(os.path.join(root, "skills", "claude-code", name, "SKILL.md")))
             desc = raw_scalar(fm, "description") if fm else None
             if desc and phrase in desc:
                 owners.append(name)
@@ -380,20 +328,45 @@ def check_glossary_terms(root):
             fail(f"CONTEXT.md has no glossary entry for the load-bearing term '{term}'")
 
 
+def _block(text, marker):
+    """The content between a matched pair of `marker`, or None if absent."""
+    m = re.compile(re.escape(marker) + r"\n(.*?)\n" + re.escape(marker), re.S).search(text)
+    return m.group(1) if m else None
+
+
+def check_resolution_blocks(root):
+    """Check 11. The resolution block is harness-specific (the global config path
+    differs), so it is not synced to a shared home. Instead every skill in a tree
+    must carry the same resolution block, so it cannot drift within a tree."""
+    marker = "<!-- nitpickle:resolution -->"
+    for h in HARNESSES:
+        ref_name = ref_block = None
+        for name in FULL_BLOCK_SKILLS:
+            path = os.path.join(root, "skills", h, name, "SKILL.md")
+            block = _block(read(path), marker)
+            if block is None:
+                fail(f"skills/{h}/{name}/SKILL.md is missing the resolution block")
+                continue
+            if ref_block is None:
+                ref_name, ref_block = name, block
+            elif block != ref_block:
+                fail(
+                    f"skills/{h}/{name}/SKILL.md resolution block differs from "
+                    f"skills/{h}/{ref_name}/SKILL.md"
+                )
+
+
 def check_canonical_blocks(root):
     for block_file, canonical_file, marker in CANONICAL_BLOCKS:
-        pattern = re.compile(
-            re.escape(marker) + r"\n(.*?)\n" + re.escape(marker), re.S
-        )
-        copy = pattern.search(read(os.path.join(root, block_file)))
-        home = pattern.search(read(os.path.join(root, canonical_file)))
-        if not home:
+        copy = _block(read(os.path.join(root, block_file)), marker)
+        home = _block(read(os.path.join(root, canonical_file)), marker)
+        if home is None:
             fail(f"{canonical_file} is missing the canonical block '{marker}'")
             continue
-        if not copy:
+        if copy is None:
             fail(f"{block_file} is missing its copy of the block '{marker}'")
             continue
-        if copy.group(1) != home.group(1):
+        if copy != home:
             fail(
                 f"{block_file} block '{marker}' differs from the canonical "
                 f"home {canonical_file}"
@@ -408,17 +381,23 @@ def main():
         warn("pyyaml not installed, frontmatter checks degraded to regex")
 
     files = tracked_files(root)
-    skill_names = check_skills(root)
-    check_references(root, skill_names, files)
-    check_codex_references(root, skill_names)
-    check_harness_neutral_skills(root)
-    check_readme_count(root, skill_names)
+    skills = {h: check_skills(root, h) for h in HARNESSES}
+    claude_skills = skills["claude-code"]
+
+    if set(skills["claude-code"]) != set(skills["codex"]):
+        only_cc = set(skills["claude-code"]) - set(skills["codex"])
+        only_cx = set(skills["codex"]) - set(skills["claude-code"])
+        fail(f"skill sets differ between harnesses: claude-only {only_cc}, codex-only {only_cx}")
+
+    check_references(root, skills, files)
+    check_bare_skill_tokens(root, skills, files)
+    check_readme_count(root, len(claude_skills))
     check_versions(root)
     check_banned_characters(root, files)
-    check_collision_phrases(root, skill_names)
+    check_collision_phrases(root, claude_skills)
     check_glossary_terms(root)
     check_canonical_blocks(root)
-    check_codex_bundle_drift(root)
+    check_resolution_blocks(root)
 
     for w in warnings:
         print(f"warning: {w}")
@@ -427,7 +406,7 @@ def main():
             print(f"FAIL: {f}")
         print(f"\n{len(failures)} failure(s)")
         sys.exit(1)
-    print(f"ok: {len(skill_names)} skills, {len(files)} tracked files checked")
+    print(f"ok: {len(claude_skills)} skills per harness, {len(files)} tracked files checked")
 
 
 if __name__ == "__main__":

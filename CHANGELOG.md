@@ -1,38 +1,23 @@
 # Changelog
 
-One entry per released version. Bump the version in both
-`.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json` for every
-release (`make bump VERSION=x.y.z`), and add the entry here.
+One entry per released version. Bump the version across the plugin manifests for
+every release (`make bump VERSION=x.y.z` keeps the Claude and Codex manifests in
+sync), and add the entry here.
 
 ## 0.10.0
 
-- NitPickle is harness-agnostic. The skills and hooks are authored once and
-  install on OpenAI Codex as well as Claude Code, from one canonical source.
-- Codex marketplace. The repo carries a committed Codex marketplace bundle under
-  `.agents/plugins`, so `codex plugin marketplace add powerslider/nitpickle` then
-  `codex plugin add nitpickle@nitpickle` installs the skills. The bundle is
-  emitted by `make codex-dist` and held to the
-  canonical source by validator check 11, the one committed generated artifact
-  (ADR-0010). The install layout (`~/.agents/skills`, the Codex hooks config) still
-  generates on demand via `make install-codex`.
-- `tools/generate.py` renders the Codex layout from the canonical source,
-  rewriting `/nitpickle:<name>` cross-references to Codex `$name`. Check 3b resolves
-  every rewritten `$name`, and check 10 keeps Claude-only tokens out of the skills.
+- NitPickle installs natively on both Claude Code and Codex. Each harness has its
+  own hand-optimized skill tree, `skills/claude-code` (`/nitpickle:` refs) and
+  `skills/codex` (`$nitpickle:` refs), sharing the hooks and docs (see ADR-0010).
+- Install: Claude Code `/plugin install nitpickle@nitpickle`. Codex `codex plugin
+  marketplace add powerslider/nitpickle` then `codex plugin add nitpickle@nitpickle`.
 - The write guardrail installs separately on Codex, which does not run
-  plugin-bundled hooks. The plugin ships the installer and the two hook scripts, so
-  a plugin user runs `generate.py --install-hooks` from the plugin cache and trusts
-  the hooks once with `/hooks`. `make install-codex` does the full install from a
-  clone.
-- The two Python hooks are harness-neutral. The Write guardrail self-dispatches on
-  Codex, splitting the command with a quote-aware lexer, anchoring to each
-  segment's leading token, and joining backslash-newline continuations, closing
-  chained-commit and line-continuation bypasses and a string-mention false
-  positive. The house-style hook parses a Codex apply_patch body per file. The
-  installer prunes skills it no longer ships on a re-install, scoped to its own
-  manifest.
-- Honest limits, recorded in ADR-0010: the guardrail is best-effort on Codex and
-  dormant until the hooks are trusted, and house style is weaker on a Codex
-  apply_patch edit.
+  plugin-bundled hooks. Run `python3 tools/install-hooks.py` from the installed
+  plugin, then trust the hooks once with `/hooks`.
+- The shared guardrail is hardened on Codex, self-dispatching on the whole Bash
+  call to close chained-command and line-continuation bypasses. Honest limits
+  (ADR-0004, ADR-0010): best-effort on Codex and dormant until the hooks are
+  trusted.
 
 ## 0.9.1
 

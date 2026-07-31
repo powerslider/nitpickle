@@ -5,6 +5,7 @@
 # Local review packets and audit roadmaps (transient, embed proof evidence)
 docs/reviews/
 docs/audits/
+docs/plans/
 
 # Python test artifacts
 __pycache__/
@@ -20,9 +21,12 @@ tests/fixtures/ui-proof-app/.playwright/
 # Stray Playwright output if a run is launched from another cwd
 test-results/
 
-# Generated Codex install layout (generate on demand, never committed).
-# The committed exception is the marketplace distribution bundle under
-# .agents/plugins/, which a remote `codex plugin add` reads from git (ADR-0010).
+# The Codex marketplace registry under .agents/plugins/ is committed (a remote
+# `codex plugin add` reads it from git). Ignore any other stray .agents/ content
+# and the user-level .codex/ config a local dogfood run may drop.
 .agents/*
 !.agents/plugins/
 .codex/
+
+# Serena MCP project state
+.serena/

@@ -1,40 +1,41 @@
 # Architecture
 
-How the NitPickle plugin works. The scope is harness-agnostic: skills, a
-convention layer, two hooks, and this repo's own proof tooling, authored once and
-installed on Claude Code or Codex. The Codex install layout is generated on demand
-from the canonical source, and the Codex marketplace bundle under `.agents/plugins`
-is committed for `codex plugin add` (see ADR-0010). No services, no database, no
-runtime, no server. Everything runs inside the agent against a local branch or, for
-PR review, a local checkout via `gh`.
+How the NitPickle plugin works. The scope is a set of skills, a convention layer,
+two hooks, and this repo's own proof tooling, installed on Claude Code or Codex.
+Each harness has its own hand-optimized skill tree, and the repo ships a native
+marketplace for each (see ADR-0010). No services, no database, no runtime, no
+server. Everything runs inside the agent against a local branch or, for PR review,
+a local checkout via `gh`.
 
 ## Shape
 
 ```
-skills/*/SKILL.md            thirteen skills. preflight is the core, the others
-                             compose around it (plan, gate, spec, PR review,
-                             commit messages, bootstrap, handoff, resume,
-                             resolve-conflicts)
-hooks/                       house-style guard (PreToolUse)
-.nitpickle/                  policy (rules + commands), taste, per-developer
-                             working state (validation log, todo)
-CONTEXT.md + docs/adr/       glossary + decisions (per repo)
-tools/ + .github/workflows/  this repo's own consistency proof seam
+skills/claude-code/*/SKILL.md   fourteen skills, Claude-optimized (/nitpickle: refs)
+skills/codex/*/SKILL.md         the same fourteen, Codex-optimized ($nitpickle: refs)
+hooks/                          house-style + write guardrail (shared)
+.claude-plugin/ .codex-plugin/  per-harness plugin manifests
+.agents/plugins/                the Codex marketplace registry
+.nitpickle/                     policy (rules + commands), taste, working state
+CONTEXT.md + docs/adr/          glossary + decisions (per repo)
+tools/ + .github/workflows/     this repo's own consistency proof seam
 ```
+
+preflight is the core skill, the others compose around it (plan, gate, spec, PR
+review, commit messages, bootstrap, handoff, resume, resolve-conflicts, audit).
 
 ## Distribution
 
-Two harnesses install from one canonical source.
+Two harnesses, two hand-maintained skill trees, native install on each.
 
-- **Claude Code.** The repo is its own marketplace (`.claude-plugin/`). A `/plugin
-  install` activates the skills and the hooks together.
-- **Codex.** Two surfaces. The committed marketplace bundle under `.agents/plugins`
-  (emitted by `make codex-dist`, held to the source by validator check 11) lets
-  `codex plugin add nitpickle@nitpickle` install the skills with `$name` refs. The
-  Write guardrail cannot ship in a Codex plugin, Codex does not run plugin-bundled
-  hooks, so it installs separately via `generate.py --install-hooks` and is trusted
-  once with `/hooks`. `make install-codex` does the full install, skills plus
-  guardrail, from a clone.
+- **Claude Code.** The repo is its own marketplace (`.claude-plugin/`), the plugin
+  `skills` field points at `skills/claude-code`. A `/plugin install` activates the
+  skills and the hooks together.
+- **Codex.** The repo is also a Codex marketplace (`.agents/plugins/marketplace.json`
+  plus `.codex-plugin/plugin.json` pointing at `skills/codex`). `codex plugin add
+  nitpickle@nitpickle` installs the skills with `$nitpickle:` refs. The Write guardrail
+  cannot ship in a Codex plugin, Codex does not run plugin-bundled hooks, so it
+  installs separately via `tools/install-hooks.py` and is trusted once with
+  `/hooks`.
 
 ## Principles
 

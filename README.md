@@ -59,11 +59,9 @@ Requirements: **Claude Code** (CLI, desktop, IDE, or web) or **OpenAI Codex**,
 the **GitHub CLI (`gh`)**. Skills detect your repo's toolchain (Go, Node, Rust,
 Python, ...) for test and lint commands, so no specific language is required.
 
-NitPickle is authored once and installs on either harness. The skills and hooks
-live under `skills/` and `hooks/`. The Codex install layout (`~/.agents/skills`
-plus a Codex hooks config) is generated on demand and never committed, while the
-Codex marketplace bundle under `.agents/plugins` is committed so `codex plugin add`
-can read it from git (see ADR-0010).
+Each harness gets its own hand-optimized skill tree, `skills/claude-code/` for
+Claude Code and `skills/codex/` for Codex, and installs natively as a plugin. The
+hooks and docs are shared (see ADR-0010).
 
 ### Claude Code
 
@@ -92,37 +90,28 @@ Or enable it automatically in a repo via `.claude/settings.json`:
 
 ### Codex
 
-Two ways in. The plugin gives you the skills. The full install adds the Write
-guardrail, which a Codex plugin cannot carry (Codex does not run plugin-bundled
-hooks).
-
-**Plugin (skills).** This repo is also a Codex marketplace.
+This repo is also a Codex marketplace.
 
 ```
 codex plugin marketplace add powerslider/nitpickle
 codex plugin add nitpickle@nitpickle
 ```
 
-The skills install with Codex `$name` invocation syntax (`$preflight`, `$grill`),
-or are chosen implicitly by description. `codex plugin add` prints the installed
-plugin root. To add the guardrail, run the bundled installer from there, then
-trust the hooks once with `/hooks`:
+The skills install with Codex `$nitpickle:<name>` invocation syntax
+(`$nitpickle:preflight`, `$nitpickle:grill`), or are chosen implicitly by
+description.
+
+The Write guardrail cannot ride in the plugin (Codex does not run plugin-bundled
+hooks), so install it separately. `codex plugin add` prints the installed plugin
+root, run the bundled installer from there, then trust the hooks once with
+`/hooks`:
 
 ```
-python3 <plugin-root>/tools/generate.py --install-hooks
+python3 <plugin-root>/tools/install-hooks.py
 ```
 
-**Full install (skills plus guardrail).** From a clone:
-
-```
-make install-codex
-```
-
-This writes the skills to `~/.agents/skills`, the hook scripts to
-`~/.config/nitpickle/hooks` with a `~/.codex/hooks.json` pointing at them, and
-seeds the global defaults under `~/.config/nitpickle` if absent. Trust the hooks
-once with `/hooks`. The Write guardrail runs as a Codex PreToolUse hook,
-best-effort per ADR-0010, and stays dormant until trusted.
+The guardrail runs as a Codex PreToolUse hook, best-effort per ADR-0004, and stays
+dormant until trusted.
 
 Once installed, on Claude Code the skills are invoked as `/nitpickle:bootstrap`,
 `/nitpickle:preflight`, `/nitpickle:review-pr`, `/nitpickle:grill`,
