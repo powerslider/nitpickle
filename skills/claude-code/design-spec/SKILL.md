@@ -57,7 +57,7 @@ both, and when only one exists it applies unchanged.
 Explore the codebase (or the described/planned system) to extract the
 architecture - components, ownership, seams, external dependencies, the defining
 flows (for example billing or metering when the system has them, and
-integrations). Use the `Explore` agent
+integrations). Use a read-only exploration subagent
 for breadth. You are reverse-engineering the *architecture*, not cataloguing
 code. Ignore implementation mechanics that won't appear in the spec.
 

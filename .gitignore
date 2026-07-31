@@ -5,6 +5,7 @@
 # Local review packets and audit roadmaps (transient, embed proof evidence)
 docs/reviews/
 docs/audits/
+docs/plans/
 
 # Python test artifacts
 __pycache__/
@@ -19,3 +20,13 @@ tests/fixtures/ui-proof-app/blob-report/
 tests/fixtures/ui-proof-app/.playwright/
 # Stray Playwright output if a run is launched from another cwd
 test-results/
+
+# The Codex marketplace registry under .agents/plugins/ is committed (a remote
+# `codex plugin add` reads it from git). Ignore any other stray .agents/ content
+# and the user-level .codex/ config a local dogfood run may drop.
+.agents/*
+!.agents/plugins/
+.codex/
+
+# Serena MCP project state
+.serena/

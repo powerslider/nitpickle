@@ -54,10 +54,16 @@ repo-specific guardrails, and an audit trail.
 
 ## Install
 
-Requirements: **Claude Code** (CLI, desktop, IDE, or web), **git**, and
-**python3** (the house-style hook). `review-pr` additionally needs the
-**GitHub CLI (`gh`)**. Skills detect your repo's toolchain (Go, Node, Rust,
+Requirements: **Claude Code** (CLI, desktop, IDE, or web) or **OpenAI Codex**,
+**git**, and **python3** (the house-style hook). `review-pr` additionally needs
+the **GitHub CLI (`gh`)**. Skills detect your repo's toolchain (Go, Node, Rust,
 Python, ...) for test and lint commands, so no specific language is required.
+
+Each harness gets its own hand-optimized skill tree, `skills/claude-code/` for
+Claude Code and `skills/codex/` for Codex, and installs natively as a plugin. The
+hooks and docs are shared (see ADR-0010).
+
+### Claude Code
 
 This repo is both the plugin and its own marketplace.
 
@@ -82,7 +88,32 @@ Or enable it automatically in a repo via `.claude/settings.json`:
 }
 ```
 
-Once installed, the skills are invoked as `/nitpickle:bootstrap`,
+### Codex
+
+This repo is also a Codex marketplace.
+
+```
+codex plugin marketplace add powerslider/nitpickle
+codex plugin add nitpickle@nitpickle
+```
+
+The skills install with Codex `$nitpickle:<name>` invocation syntax
+(`$nitpickle:preflight`, `$nitpickle:grill`), or are chosen implicitly by
+description.
+
+The Write guardrail cannot ride in the plugin (Codex does not run plugin-bundled
+hooks), so install it separately. `codex plugin add` prints the installed plugin
+root, run the bundled installer from there, then trust the hooks once with
+`/hooks`:
+
+```
+python3 <plugin-root>/tools/install-hooks.py
+```
+
+The guardrail runs as a Codex PreToolUse hook, best-effort per ADR-0004, and stays
+dormant until trusted.
+
+Once installed, on Claude Code the skills are invoked as `/nitpickle:bootstrap`,
 `/nitpickle:preflight`, `/nitpickle:review-pr`, `/nitpickle:grill`,
 `/nitpickle:feature-plan`, `/nitpickle:design-spec`, `/nitpickle:polish`,
 `/nitpickle:test-spec`, `/nitpickle:audit`, `/nitpickle:ui-proof`,

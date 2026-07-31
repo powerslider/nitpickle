@@ -1,13 +1,13 @@
 ---
 name: bootstrap
-description: Bootstrap the NitPickle convention layer in a repo. Detect the toolchain and write .nitpickle/policy.yaml, draft a starter CONTEXT.md glossary from the codebase, scaffold docs/adr/ with a template, and create the validation log. NitPickle-flavored and glossary-first, the convention-layer counterpart to Claude Code's /init (which writes CLAUDE.md). Trigger when the user wants to set up NitPickle in a project, scaffold the convention layer, generate a CONTEXT.md glossary, or says "nitpickle bootstrap", "set up nitpickle here", "onboard this repo". Also trigger to refresh the glossary when there are clues the ubiquitous language has drifted, such as new domain terms recurring in code, names, or PRs that are absent from CONTEXT.md, a renamed core type or module, or a plan or change that introduces a concept the glossary does not cover.
+description: Bootstrap the NitPickle convention layer in a repo. Detect the toolchain and write .nitpickle/policy.yaml, draft a starter CONTEXT.md glossary from the codebase, scaffold docs/adr/ with a template, and create the validation log. NitPickle-flavored and glossary-first, the convention-layer counterpart to the agent's project memory init (CLAUDE.md). Trigger when the user wants to set up NitPickle in a project, scaffold the convention layer, generate a CONTEXT.md glossary, or says "nitpickle bootstrap", "set up nitpickle here", "onboard this repo". Also trigger to refresh the glossary when there are clues the ubiquitous language has drifted, such as new domain terms recurring in code, names, or PRs that are absent from CONTEXT.md, a renamed core type or module, or a plan or change that introduces a concept the glossary does not cover.
 ---
 
 # Bootstrap - scaffold the NitPickle convention layer
 
 Bootstrap the per-repo files the NitPickle skills read and write: `.nitpickle/`
 config, a `CONTEXT.md` glossary, and `docs/adr/`. This is the convention-layer
-counterpart to Claude Code's `/init`, which writes `CLAUDE.md`. The two are
+counterpart to the agent's project memory init (`CLAUDE.md`). The two are
 complementary, so run both.
 
 Everything written follows the house style: short, professional, no em dashes or
@@ -88,7 +88,7 @@ both, and when only one exists it applies unchanged.
 The glossary is the heart of NitPickle's repo intelligence. It is **human
 curated**, so draft and confirm. Do not dump.
 
-- Explore the codebase (use the `Explore` agent) for the domain language:
+- Explore the codebase (use a read-only exploration subagent) for the domain language:
   top-level modules and packages, core domain types, the nouns that recur across
   names. Look for the ubiquitous language, not the framework plumbing.
 - On a refresh, read the existing `CONTEXT.md` first and surface only terms that
@@ -150,9 +150,9 @@ then keep it to what differs from global. Do not duplicate global.
 
 List what was created and what needs a human pass, especially the glossary. Call
 out any term you dropped as runtime mechanics and any heading grouping you chose,
-so the user can override. Point the user at `/init` for the complementary
-`CLAUDE.md` if they have not run it, and at `/nitpickle:preflight` for their next
-branch.
+so the user can override. Point the user at their agent's project memory init for
+the complementary `CLAUDE.md` if they have not run it, and at
+`/nitpickle:preflight` for their next branch.
 
 ## Boundaries
 

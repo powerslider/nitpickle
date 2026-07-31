@@ -1,8 +1,7 @@
 # Conflict format
 
 The reference `resolve-conflicts` writes against. It defines the per-Conflict
-record the skill reports, and (from Phase 2) the resolution and proof attached to
-each. A Conflict is the unit the skill works on: a content hunk where both sides
+record the skill reports, and the resolution and proof attached to each. A Conflict is the unit the skill works on: a content hunk where both sides
 changed overlapping lines, or a file-level conflict (add/add, modify/delete,
 both-deleted, rename, binary) that has no hunk. Classification and approval are
 per hunk, staging stays per path.

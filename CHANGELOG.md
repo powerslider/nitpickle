@@ -1,8 +1,23 @@
 # Changelog
 
-One entry per released version. Bump the version in both
-`.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json` for every
-release (`make bump VERSION=x.y.z`), and add the entry here.
+One entry per released version. Bump the version across the plugin manifests for
+every release (`make bump VERSION=x.y.z` keeps the Claude and Codex manifests in
+sync), and add the entry here.
+
+## 0.10.0
+
+- NitPickle installs natively on both Claude Code and Codex. Each harness has its
+  own hand-optimized skill tree, `skills/claude-code` (`/nitpickle:` refs) and
+  `skills/codex` (`$nitpickle:` refs), sharing the hooks and docs (see ADR-0010).
+- Install: Claude Code `/plugin install nitpickle@nitpickle`. Codex `codex plugin
+  marketplace add powerslider/nitpickle` then `codex plugin add nitpickle@nitpickle`.
+- The write guardrail installs separately on Codex, which does not run
+  plugin-bundled hooks. Run `python3 tools/install-hooks.py` from the installed
+  plugin, then trust the hooks once with `/hooks`.
+- The shared guardrail is hardened on Codex, self-dispatching on the whole Bash
+  call to close chained-command and line-continuation bypasses. Honest limits
+  (ADR-0004, ADR-0010): best-effort on Codex and dormant until the hooks are
+  trusted.
 
 ## 0.9.1
 

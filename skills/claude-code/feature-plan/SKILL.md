@@ -65,7 +65,7 @@ the PR as a finding.
 Gather detailed context from every source that's appropriate. Run independent
 strands in parallel where possible:
 
-- **Codebase** - use the `Explore` agent (medium-to-thorough breadth) to map
+- **Codebase** - use a read-only exploration subagent (medium-to-thorough breadth) to map
   affected components, the seams the change lives at, prior art to reuse, test
   conventions, and risky areas. Look for what already exists before proposing
   anything new.
