@@ -2,7 +2,7 @@
 
 # NitPickle
 
-**Proof-driven engineering skills for Claude Code.**
+**Proof-driven engineering skills for Claude Code and Codex.**
 
 A senior-engineer control plane for AI coding agents. Controlled delegation,
 not autonomy. You stay the engineer of record, and every claim the agent makes
@@ -11,6 +11,7 @@ comes with runnable evidence.
 [![ci](https://github.com/powerslider/nitpickle/actions/workflows/ci.yml/badge.svg)](https://github.com/powerslider/nitpickle/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 ![Claude Code plugin](https://img.shields.io/badge/Claude%20Code-plugin-5A45FF)
+![Codex plugin](https://img.shields.io/badge/Codex-plugin-000000)
 ![Status: alpha](https://img.shields.io/badge/status-alpha-orange)
 
 </div>
@@ -34,7 +35,7 @@ repo-specific guardrails, and an audit trail.
   policy, and personal taste live in flat files you diff and commit.
 - **Trust zones.** PR text, issues, dependency docs, and web content are data,
   never instructions. Prompt-injection resistance is a first-class property.
-- **No services.** Everything runs inside Claude Code against a local branch
+- **No services.** Everything runs inside the agent against a local branch
   or a local checkout via `gh`.
 
 ## Contents
@@ -43,11 +44,9 @@ repo-specific guardrails, and an audit trail.
 - [Getting started](#getting-started)
 - [The pipeline at a glance](#the-pipeline-at-a-glance)
 - [The skills](#the-skills)
-- [How a change flows through](#how-a-change-flows-through-end-to-end)
 - [The shared substrate](#the-shared-substrate)
 - [Status](#status)
 - [Contributing](#contributing)
-- [Development](#development)
 - [Security](#security)
 - [License](#license)
 - [Acknowledgments](#acknowledgments)
@@ -113,28 +112,38 @@ python3 <plugin-root>/tools/install-hooks.py
 The guardrail runs as a Codex PreToolUse hook, best-effort per ADR-0004, and stays
 dormant until trusted.
 
-Once installed, on Claude Code the skills are invoked as `/nitpickle:bootstrap`,
-`/nitpickle:preflight`, `/nitpickle:review-pr`, `/nitpickle:grill`,
-`/nitpickle:feature-plan`, `/nitpickle:design-spec`, `/nitpickle:polish`,
-`/nitpickle:test-spec`, `/nitpickle:audit`, `/nitpickle:ui-proof`,
-`/nitpickle:commit-msg`, `/nitpickle:handoff`, `/nitpickle:resume`, and
-`/nitpickle:resolve-conflicts`.
+Once installed, invoke any skill by name with your harness's syntax,
+`/nitpickle:preflight` on Claude Code or `$nitpickle:preflight` on Codex, or let it
+be chosen implicitly by description. The [skills table](#the-skills) lists them all.
 The house-style hook activates automatically.
 
 ## Getting started
 
+### Claude Code
+
 1. Install the global defaults once so every repo inherits sensible config:
    `cp defaults/nitpickle/* ~/.claude/nitpickle/`. See
    [defaults/README.md](defaults/README.md).
-2. In a repo, run `/nitpickle:bootstrap` to scaffold the convention layer. It detects
-   the toolchain for `.nitpickle/policy.yaml`, drafts a starter `CONTEXT.md`
-   glossary, and lays down `docs/adr/`. Run `/init` too for the complementary
-   `CLAUDE.md`. See [.nitpickle/README.md](.nitpickle/README.md) for what each
-   file does.
-3. On your next branch, run `/nitpickle:preflight` before opening the PR. That's
-   the core loop. Everything else composes around it.
-4. Track whether it changed your behavior in `.nitpickle/validation-log.md`. That
-   is the metric that decides if the approach is working.
+2. In a repo, run `/nitpickle:bootstrap` to scaffold the convention layer. It
+   detects the toolchain for `.nitpickle/policy.yaml`, drafts a starter
+   `CONTEXT.md` glossary, and lays down `docs/adr/`. Run `/init` too for the
+   complementary `CLAUDE.md`. See [.nitpickle/README.md](.nitpickle/README.md) for
+   what each file does.
+3. On your next branch, run `/nitpickle:preflight` before opening the PR.
+
+### Codex
+
+1. Install the global defaults once:
+   `cp defaults/nitpickle/* ~/.config/nitpickle/`. See
+   [defaults/README.md](defaults/README.md).
+2. In a repo, run `$nitpickle:bootstrap` to scaffold the same convention layer
+   (`.nitpickle/policy.yaml`, a starter `CONTEXT.md` glossary, `docs/adr/`). Run
+   your agent's project memory init for the complementary `AGENTS.md`.
+3. On your next branch, run `$nitpickle:preflight` before opening the PR.
+
+On either harness, `preflight` is the core loop and everything else composes
+around it. Track whether it changed your behavior in
+`.nitpickle/validation-log.md`, the metric that decides if the approach works.
 
 ## The pipeline at a glance
 
@@ -193,7 +202,7 @@ a mandate.
 
 | Skill | Use it when… | Reads | Produces |
 | --- | --- | --- | --- |
-| **bootstrap** | setting up NitPickle in a repo, or refreshing the glossary when the ubiquitous language drifts | the codebase, toolchain, `~/.claude/nitpickle/` | `.nitpickle/`, `CONTEXT.md`, `docs/adr/` |
+| **bootstrap** | setting up NitPickle in a repo, or refreshing the glossary when the ubiquitous language drifts | the codebase, toolchain, global defaults | `.nitpickle/`, `CONTEXT.md`, `docs/adr/` |
 | **feature-plan** | you have a rough idea and need a researched, phased plan | codebase, web, `CONTEXT.md`, `docs/adr/` | `docs/plans/<slug>.md` |
 | **grill** | you have a plan/approach to stress-test before coding | the plan (incl. `docs/plans/`), `CONTEXT.md`, `docs/adr/`, `preferences.md` | approved `docs/plans/<slug>.md` + inline `CONTEXT`/ADR updates |
 | **design-spec** | you need an architectural guide for a system/component | the system, `CONTEXT.md`, `docs/adr/` | `docs/design/<slug>.md` |
@@ -208,270 +217,8 @@ a mandate.
 | **resume** | you are picking up in-flight work from a handoff | `docs/handoffs/<slug>.md`, the linked plan, git + policy commands | the verified work continued from its next step |
 | **resolve-conflicts** | you hit conflicts from a merge, rebase, or cherry-pick | the conflict index (base, ours, theirs), `policy.yaml` | each conflict mapped and classified, proof-gated resolutions |
 
-### When to reach for which
-
-```mermaid
-flowchart TD
-    Q{What are you doing?}
-    Q -->|Setting up a new repo| IN[bootstrap]
-    Q -->|Starting new work| A{How clear is the path?}
-    A -->|Fuzzy, needs research| FP[feature-plan]
-    A -->|Clear idea, want it challenged| GR[grill]
-    Q -->|Need to explain a system| DS[design-spec]
-    Q -->|About to open a PR| PF[preflight]
-    Q -->|Reviewing a teammate's PR| RV[review-pr]
-    Q -->|Improving the quality of code you wrote| PL[polish]
-    Q -->|Writing tests, test-first or for existing code| TS[test-spec]
-    Q -->|Improving an existing or inherited feature| AU[audit]
-    Q -->|Committing staged changes| CM[commit-msg]
-    Q -->|Pausing work for another session| HO[handoff]
-    Q -->|Picking up a paused task| RE[resume]
-    Q -->|Hit a merge or rebase conflict| RC[resolve-conflicts]
-
-    FP --> GR
-    GR --> code[/write code/]
-    TS -.->|red spec| code
-    code --> PF
-    PF --> open([open PR])
-
-    classDef s fill:#1f2937,stroke:#60a5fa,color:#e5e7eb
-    class IN,FP,GR,DS,PF,RV,PL,TS,AU,CM,HO,RE,RC s
-```
-
-### bootstrap - scaffold the convention layer
-
-**When:** setting up NitPickle in a repo, or refreshing the `CONTEXT.md`
-glossary when the ubiquitous language has drifted.
-
-Detects the toolchain and writes `.nitpickle/policy.yaml`, drafts a starter
-`CONTEXT.md` glossary from the codebase (drafted and confirmed, never
-auto-dumped), scaffolds `docs/adr/` with a template, and creates the validation
-log. The convention-layer counterpart to Claude Code's `/init` (which writes
-`CLAUDE.md`). Run both. Never clobbers existing convention files.
-
-### feature-plan - rough idea to a phased, converged plan
-
-**When:** you're starting non-trivial work and the path isn't obvious yet.
-
-Does extensive multi-source analysis (codebase via the `Explore` agent, web
-research, plus existing specs/ADRs/issues), breaks the work into
-independently-shippable **vertical-slice phases**, and **iterates to convergence**.
-An adversarial critic subagent hunts gaps until two consecutive passes find
-only cosmetic edits. Each phase names its **proof surface** (where `preflight`
-will later prove it) so verification is cheap downstream.
-
-Output: `docs/plans/<slug>.md`. Hand it straight to `grill` next.
-
-### grill - the plan gate
-
-**When:** you have a plan or approach and want it interrogated before any code.
-
-Socratic, one-question-at-a-time interrogation (recommending an answer each
-time), challenging the plan against the domain glossary, recorded decisions, and
-your taste. Resolved terms get written to `CONTEXT.md` and hard-to-reverse
-trade-offs get offered as ADRs **inline, as they crystallize**. No code is
-written until the plan passes.
-
-On approval the plan is persisted to `docs/plans/<slug>.md` with an approved
-status and a `Branch:` line, so `preflight` can later check the branch against
-it. This is NitPickle's realization of "plans before patches." Pairs with
-`feature-plan` (which produces the plan grill then stress-tests).
-
-### design-spec - architectural guide
-
-**When:** a system or component needs a clean explanation so its implementation
-is easier to read, or before building something architecturally significant.
-
-Produces an expert-level spec: overview, components (roles/responsibilities),
-integration primitives, and key flows (for example billing or metering when the
-system has them), all with Mermaid diagrams.
-Deliberately **avoids code references and implementation detail**. The goal is
-that a reader can predict *where in the code* a responsibility lives.
-
-Output: `docs/design/<slug>.md`.
-
-### preflight - proof-driven self-review
-
-**When:** you're about to open a PR. The core skill. Run it on every branch.
-
-Reviews your branch against its base like a strict senior reviewer, runs your
-linters/tests as evidence, and **builds a runnable proof for each finding** in an
-isolated worktree. Severity is gated on proof, so unproven concerns are
-downgraded to nits, never hidden. "No correct seam to prove it" is itself an
-architectural finding. When an approved plan in `docs/plans/` names the current
-branch, the diff is also checked against that phase's intent.
-
-Output: ranked findings, each with `[Fix] [TODO] [Dismiss] [Prove deeper]`. Stays
-local. Nothing is posted.
-
-### review-pr - proof-driven review of someone else's PR
-
-**When:** you're reviewing a teammate's GitHub PR.
-
-The same proof engine as `preflight`, pointed outward. Fetches the PR via `gh`,
-**verifies the diff against its stated intent** (the PR description is a claim to
-check, not truth), runs proof-gated findings in an isolated checkout, and
-**adversarially verifies each proven-blocking finding** (a skeptic subagent tries
-to refute it) so a green-but-wrong proof does not cost a teammate a wrong request
-for changes. It produces a **review packet** (summary, risk, approval
-recommendation, ranked findings, suggested author comments), written to a local
-`docs/reviews/pr-<n>.md`. Separates **investigation from authority**: you choose
-`Post / Edit / Dismiss / Convert to task / Ask for proof` per item. Nothing posts
-without approval. It never submits an Approve review unless you explicitly say so.
-
-### polish - convention-aware quality improvement
-
-**When:** you want to improve the quality of code you just wrote, refactoring it
-toward the repo's idioms and taste.
-
-The inverse of `preflight`: where preflight reviews and proves defects, polish
-transforms and proves preservation. It reads the same convention layer (glossary,
-preferences, ADRs, policy) that generic cleanup tools cannot see, and proposes
-each change as a **Refinement**: a structural transform (reuse, altitude judged by
-the deletion test, dead code) carrying a **behavior-preservation proof** built in
-an isolated worktree. The proof is tiered, the policy commands when they cover the
-code, else a synthesized throwaway characterization test, else the Refinement is
-downgraded to a suggestion. A green proof shows the change is safe, never that it
-is better, so every Refinement is applied to the working tree only on per-change
-approval (see [ADR-0005](docs/adr/0005-polish-proves-preservation-not-betterment.md)).
-Quality only, it never hunts bugs or flags convention violations, those stay
-`preflight`'s. It never commits or pushes.
-
-### test-spec - proof-driven test authorship
-
-**When:** you want tests written test-first, or the highest-value tests identified
-and strengthened for code that already exists.
-
-The third proof-engine sibling. Where `preflight` proves defects and `polish` proves
-preservation, `test-spec` authors and proves the tests both only synthesize and throw
-away. The deliverable is a **Kept test**. Test-first it writes a failing executable
-spec and stops at red, handing the green step to you, it never authors production
-logic. For existing code it characterizes untested behavior and strengthens weak
-tests. Each Kept test must be shown to fail for the right reason, a tiered
-**Fail-demonstration** (a killed mutant or removed line is strong, a red run against
-absent code is weak), and the correctness of any pinned behavior is gated on you, the
-**Test oracle**, since a program cannot be its own oracle (see
-[ADR-0006](docs/adr/0006-test-spec-proves-a-test-can-fail-not-that-behavior-is-correct.md)).
-It ranks tests by risk, not coverage, applies on per-test approval, and never commits
-or pushes. It builds the seam `preflight` and `polish` flag missing, and turns a bug
-`preflight` proved into a Kept regression test.
-
-Reach for it when:
-
-- **New behavior, no code yet** - test-first, one red spec at a time, you write the
-  code that turns it green.
-- **Untested code you are about to change** - characterize first, so a later `polish`
-  refactor or `preflight` review has a seam to prove against.
-- **A bug just surfaced** - turn the failing reproduction into a Kept regression test
-  before the fix, so it stays fixed.
-- **A weak, brittle, or flaky suite** - kill surviving mutants, replace change-detector
-  tests that assert internals with behavior tests, and de-flake order-dependent or
-  timing-dependent ones.
-- **Code present, unsure what to test** - risk-based selection picks error and edge
-  branches, churn-heavy and coupled code, and the test form from the code's shape.
-- **`preflight` or `polish` flagged a missing seam** - that handoff is the cue. Build
-  the seam and its tests, then re-run the flagging skill.
-
-### audit - comprehend and improve an existing feature
-
-**When:** you want to holistically improve an existing, often unfamiliar, complex
-feature, not review a diff you just wrote.
-
-`review-pr`'s inward sibling. Where review-pr reviews someone else's PR to approve it,
-audit examines existing in-repo code to improve it. It first **comprehends** the target,
-reconstructing the design of code you may not have written and ratifying its intent with
-you, then finds its **Proof-complete defects** with the proof engine and an adversarial
-skeptic, and synthesizes a **root-cause-ordered remediation roadmap** that connects each
-low-level symptom to the design decision behind it. It is a thin orchestrator, it deeply
-runs only comprehension, design, and correctness, and routes the quality, test, and
-architecture work to `polish`, `test-spec`, and `design-spec` as roadmap steps. On code
-of unknown intent it asserts only what is provable from the code alone and routes the
-rest to characterization, so it never emits an artifact-free suspicion (see
-[ADR-0008](docs/adr/0008-audit-comprehends-before-improving-and-routes-the-rest.md)). It
-applies nothing and writes a `docs/audits/<slug>.md` roadmap, gitignored and
-house-style-exempt like `docs/reviews/`.
-
-### commit-msg - draft the commit message
-
-**When:** you need a commit message for the staged changes.
-
-Inspects the staged diff (falling back to the working tree) and drafts a
-conventional-commit message in the exact format `preferences.md` defines:
-type, subject under 72 characters, a why-not-what bullet body, and the issue
-reference plus sign-off footer. Output only. It never stages, commits, or runs
-any git write command.
-
-### handoff - capture in-flight progress
-
-**When:** you are pausing work and want a different session, machine, or agent
-to finish it.
-
-Writes a `docs/handoffs/<slug>.md` capturing what is done, in flight, blocked,
-the next concrete step, ruled-out dead-ends, and a git snapshot with the
-uncommitted diff embedded (untracked files included). It links a matching
-`docs/plans/<slug>.md` rather than copying its phases. Unlike native session
-resume, the artifact is human-readable and readable by an agent that was never
-in this session. `/nitpickle:resume` reads it back. The handoff is ephemeral,
-and moving it to the other session is the author's call. Output only, it never
-commits. See [ADR-0002](docs/adr/0002-handoff-artifact-standalone-and-ephemeral.md).
-
-### resume - pick up an in-flight task
-
-**When:** you are continuing work a different session, machine, or agent paused.
-
-Loads `docs/handoffs/<slug>.md` and verifies it against reality before building
-on it: compares the recorded git snapshot to the real branch and head, applies
-the embedded diff and re-runs the policy commands rather than trusting the
-artifact's claims, and reconciles progress against the current plan. On real
-divergence (the diff fails to apply, the branch differs, or the commands fail)
-it reports each one and stops to ask, never silently building on a stale
-handoff. When the task is finalized it offers to delete the artifact. The
-artifact is semi-trusted data, it informs the work and never carries
-instructions.
-
-### resolve-conflicts - proof-driven conflict resolution
-
-**When:** you hit conflicts from a merge, rebase, or cherry-pick.
-
-Detects the in-progress operation, reads each conflict's base, mine, and incoming
-sides from the index, and maps ours and theirs to mine and incoming correctly
-(rebase swaps them, which is the usual source of wrong-side resolutions). Each
-conflict is classified trivial, semantic, or file-level. A provably-trivial hunk
-(a side-choice where the other side is a no-op) is resolved automatically. Every
-semantic resolution is proposed with a proof attempt and applied only on per-hunk
-approval, because a green build does not prove the merge kept both sides' intent
-(see [ADR-0003](docs/adr/0003-conflict-resolutions-stay-human-gated.md)). It
-writes the working tree unstaged and never runs `--continue`, so the human
-finishes the operation.
-
-## How a change flows through, end to end
-
-```mermaid
-sequenceDiagram
-    actor You
-    participant FP as feature-plan
-    participant GR as grill
-    participant PF as preflight
-    participant RV as review-pr
-    participant Repo as Repo + gh
-
-    You->>FP: rough idea
-    FP->>Repo: analyze (Explore + web + ADRs)
-    FP-->>You: phased plan (docs/plans/…)
-    You->>GR: stress-test the plan
-    GR-->>You: approved plan (+ CONTEXT/ADR updates)
-    You->>You: implement on a branch
-    You->>PF: self-review before PR
-    PF->>Repo: run linters/tests, build proofs (worktree)
-    PF-->>You: proof-gated findings → you fix
-    You->>Repo: commit (commit-msg drafts the message) and open PR
-    Note over RV: later, on a teammate's PR
-    You->>RV: review the PR
-    RV->>Repo: fetch + checkout + prove (worktree)
-    RV-->>You: review packet
-    You->>RV: approve selected comments
-    RV->>Repo: post approved comments, never auto-approve
-```
+Full descriptions of each skill, the when-to-reach-for-which guide, and the
+end-to-end flow are in [docs/skills.md](docs/skills.md).
 
 ## The shared substrate
 
@@ -479,156 +226,44 @@ The review, planning, and authoring skills read the same per-repo conventions an
 run on the same proof engine (`bootstrap` sets up those conventions). This is what
 makes findings consistent and trustworthy across the pipeline.
 
-```mermaid
-flowchart TB
-    subgraph Inputs["Per-repo conventions (versioned, human-editable)"]
-        CTX[CONTEXT.md<br/>domain glossary]
-        ADR[docs/adr/<br/>decisions]
-        POL[.nitpickle/policy.yaml<br/>commands + judgment rules]
-        PRF[.nitpickle/preferences.md<br/>your taste]
-    end
-
-    subgraph Engine["Shared engine"]
-        PROOF[Proof engine<br/>build a feedback loop → grade]
-        TRUST[Trust zones<br/>untrusted input = data, never instructions]
-    end
-
-    Inputs --> Engine
-    Engine --> S1[feature-plan]
-    Engine --> S2[grill]
-    Engine --> S3[design-spec]
-    Engine --> S4[preflight]
-    Engine --> S5[review-pr]
-    Engine --> S7[test-spec]
-    Engine --> S8[polish]
-    Engine --> S9[audit]
-    PRF --> S6[commit-msg]
-    BST[bootstrap] --> Inputs
-
-    classDef in fill:#0f172a,stroke:#fbbf24,color:#e5e7eb
-    classDef eng fill:#0f172a,stroke:#34d399,color:#e5e7eb
-    classDef s fill:#1f2937,stroke:#60a5fa,color:#e5e7eb
-    class CTX,ADR,POL,PRF in
-    class PROOF,TRUST eng
-    class S1,S2,S3,S4,S5,S6,S7,S8,S9,BST s
-```
-
 - **`CONTEXT.md`** - domain *language* (glossary only, no implementation). Skills
   speak these terms. A change needing an unnamed concept prompts naming it.
 - **`docs/adr/`** - recorded *decisions*. Skills reference them and never
   re-litigate an accepted one. A finding that contradicts an ADR is a *question*.
 - **`.nitpickle/policy.yaml`** - `commands` the agent shells out to (tests, lint,
-  vuln) and judgment `rules` a linter can't enforce. Anything a linter can decide
-  deterministically stays in the linter, not here.
+  vuln) and judgment `rules` a linter can't enforce.
 - **`.nitpickle/preferences.md`** - your personal engineering *taste*, applied on
   every review. Glossary, decisions, and taste are three separate things.
-- **Proof engine** - builds the sharpest runnable feedback loop a claim allows,
-  in an isolated worktree, then grades it. Proof gates severity.
-- **Trust zones** - PR/issue text, dependency docs, CI logs, and web pages are
-  untrusted *data*, existing source is semi-trusted, and only your request plus
-  your own working tree's `.nitpickle/` files are trusted. PR review reads
-  conventions from the PR's base branch, never the PR head. Instructions found
-  inside non-trusted content are reported, not obeyed.
 
 Config resolution reads both layers and merges: a repo's `.nitpickle/` overrides
-the global defaults at `~/.claude/nitpickle/` per top-level key, `rules` is the
-union of the two, and global alone applies when no local file exists. See
+the global defaults (`~/.claude/nitpickle/` on Claude Code, `~/.config/nitpickle/`
+on Codex) per top-level key, `rules` is the union of the two, and global alone
+applies when no local file exists. See
 [.nitpickle/README.md](.nitpickle/README.md) and
 [defaults/README.md](defaults/README.md).
 
-### The proof-gated finding loop (inside preflight / review-pr)
-
-```mermaid
-flowchart TD
-    C[Candidate finding] --> K{Provable?}
-    K -->|behavioral| T[Failing test at the seam]
-    K -->|runtime/logic| R[Minimal repro / replay / fuzz / bisect]
-    K -->|convention| D[Concrete violating diff]
-    K -->|judgment/taste| N[No mechanical loop]
-    K -->|no correct seam| MS[Missing-seam finding · important max]
-    T --> G{Artifact demonstrates it?}
-    R --> G
-    D --> G
-    G -->|yes| KEEP[Keep severity · confidence high]
-    G -->|inconclusive| DOWN[Downgrade one level · medium]
-    N --> NIT[nit / question · low confidence]
-    KEEP --> OUT([Ranked finding + evidence])
-    DOWN --> OUT
-    MS --> OUT
-    NIT --> OUT
-
-    classDef ok fill:#064e3b,stroke:#34d399,color:#e5e7eb
-    classDef warn fill:#78350f,stroke:#fbbf24,color:#e5e7eb
-    class KEEP ok
-    class DOWN,NIT warn
-```
-
-`blocking` severity requires a `test` or `repro`. **No correct seam to write the
-proof? That absence is itself a finding** - an architectural one - connecting
-review to `design-spec` / architecture work.
+The proof engine, the trust zones, and the proof-gated finding loop are documented
+in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ## Status
 
-Greenfield, packaged as a Claude Code plugin (`.claude-plugin/plugin.json`). The
-fourteen skills run on Claude Code today against a real repo. Expect breaking changes while the
-config and skill shapes settle.
+Greenfield, packaged as a native plugin for both Claude Code (`.claude-plugin/`)
+and Codex (`.agents/plugins/` plus `.codex-plugin/`). The fourteen skills run on
+both today against a real repo. Expect breaking changes while the config and skill
+shapes settle.
 
 ## Contributing
 
-Contributions are welcome. A few house rules keep the project coherent.
-
-- **Develop against a local clone.** `/plugin marketplace add /path/to/nitpickle`,
-  then `/plugin install nitpickle@nitpickle`. Dogfood it: run `/nitpickle:preflight`
-  on your branch before opening a PR.
-- **House writing style is enforced.** No em dashes and no semicolons in prose or
-  comments (a `PreToolUse` hook blocks edits that add them). Keep comments short,
-  WHAT not HOW, no package comments unless asked.
-- **Commits use Conventional Commits** with a `resolves <issue_id>` and a
-  `Signed-off-by: First Last (email)` footer. No AI or tooling attribution. See
-  [.nitpickle/preferences.md](.nitpickle/preferences.md).
-- **Every release bumps the version** in both manifests (`make bump
-  VERSION=x.y.z`) and adds a [CHANGELOG.md](CHANGELOG.md) entry. The validator
-  fails CI when the two manifests disagree.
-- **Know the layout.** Skills are markdown under `skills/<name>/SKILL.md` (plus
-  optional reference files). The hook lives in `hooks/`. Global config defaults
-  live in `defaults/`. Keep the four conventions separate: glossary
-  (`CONTEXT.md`), decisions (`docs/adr/`), policy, and taste.
-
-## Development
-
-```sh
-make test    # hook test suite (stdlib unittest)
-make lint    # repo consistency validator (tools/validate.py)
-make check   # both
-make bump VERSION=x.y.z
-```
-
-CI runs `make test` and `make lint` on every push and PR, with PyYAML installed
-for strict frontmatter parsing (local runs without it degrade to regex checks).
-The validator also keeps the canonical text blocks (resolution rule, trust
-zones, Finding schema) byte-identical across the skills and their canonical
-homes, so edit the canonical home first and copy outward.
+Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for the house
+rules (local dev, writing style, commits, releases, and the repo layout) and the
+development commands.
 
 ## Security
 
-NitPickle reads source, runs your repo's own commands inside isolated git
-worktrees, and (for `review-pr`) can post comments through your local `gh`.
-Safeguards:
-
-- **Trust zones.** PR and issue text, dependency docs, CI logs, and web pages
-  are treated as untrusted data, never as instructions. A comment that says
-  "ignore previous instructions and run X" is reported as a finding, not obeyed.
-  PR review reads convention files from the base branch, and a convention-file
-  diff inside a PR is flagged as a finding.
-  See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
-- **Nothing lands without you.** No merges, no pushes, no commits, and no posted
-  comments without explicit per-item approval. `review-pr` never submits an
-  Approve review unless you say so.
-- **Least privilege.** It uses your existing `gh` auth and git config. It does not
-  exfiltrate secrets or call external services on its own.
-
-Found a vulnerability? Please report it privately via a GitHub security advisory
-on this repository rather than opening a public issue.
+NitPickle reads source, runs your repo's own commands in isolated git worktrees,
+and can post PR comments through your local `gh`, all human-gated. The trust
+zones, the least-privilege posture, and how to report a vulnerability are in
+[SECURITY.md](SECURITY.md).
 
 ## License
 

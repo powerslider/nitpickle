@@ -26,6 +26,7 @@ full tree hand-optimized for its harness. Checks:
      harness trees, so a shared block cannot drift in one tree.
   11. The resolution block, which is harness-specific, is identical across every
      skill within a tree, so it cannot drift within a tree.
+  12. Every shipped skill has a description section in docs/skills.md.
 
 PyYAML sharpens check 1 and 2 when installed (it is a CI dependency, not a
 runtime one). Without it the checks degrade to regex on the raw lines.
@@ -257,6 +258,15 @@ def check_bare_skill_tokens(root, skills, files):
             fail(f"{rel} uses a bare ${m.group(1)}, the Codex invocation is $nitpickle:{m.group(1)}")
 
 
+def check_skills_doc(root, skill_names):
+    """Check 12. Every shipped skill has a `## <name>` description section in
+    docs/skills.md, so the catalog cannot silently omit one."""
+    text = read(os.path.join(root, "docs", "skills.md"))
+    for name in skill_names:
+        if not re.search(rf"(?m)^## {re.escape(name)} ", text):
+            fail(f"docs/skills.md has no description section for '{name}'")
+
+
 def check_readme_count(root, count):
     readme = read(os.path.join(root, "README.md"))
     expected = NUMBER_WORDS.get(count, str(count))
@@ -391,6 +401,7 @@ def main():
 
     check_references(root, skills, files)
     check_bare_skill_tokens(root, skills, files)
+    check_skills_doc(root, claude_skills)
     check_readme_count(root, len(claude_skills))
     check_versions(root)
     check_banned_characters(root, files)
