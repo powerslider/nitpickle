@@ -82,22 +82,20 @@ for _h in HARNESSES:
             f"skills/{_h}/commit-msg/SKILL.md",
             "<!-- nitpickle:conventions-commit-msg -->",
         ),
-        (
-            f"skills/{_h}/preflight/SKILL.md",
-            "docs/ARCHITECTURE.md",
-            "<!-- nitpickle:finding-schema -->",
-        ),
-        (
-            f"skills/{_h}/review-pr/REVIEW-FORMAT.md",
-            "docs/ARCHITECTURE.md",
-            "<!-- nitpickle:finding-schema -->",
-        ),
-        (
-            f"skills/{_h}/ui-proof/SKILL.md",
-            "docs/ARCHITECTURE.md",
-            "<!-- nitpickle:finding-schema -->",
-        ),
     ]
+    # Blocks homed in ARCHITECTURE.md, as (skill-relative path, marker name).
+    for _target, _marker in (
+        ("preflight/SKILL.md", "finding-schema"),
+        ("review-pr/REVIEW-FORMAT.md", "finding-schema"),
+        ("ui-proof/SKILL.md", "finding-schema"),
+        ("preflight/SKILL.md", "mutation"),
+        ("review-pr/REVIEW-FORMAT.md", "mutation"),
+    ):
+        CANONICAL_BLOCKS.append((
+            f"skills/{_h}/{_target}",
+            "docs/ARCHITECTURE.md",
+            f"<!-- nitpickle:{_marker} -->",
+        ))
 
 # Load-bearing vocabulary the skills use. Each must have a glossary entry in
 # CONTEXT.md (a "- **Term**" bullet). Curated by hand.
@@ -106,6 +104,7 @@ LOAD_BEARING_TERMS = (
     "Proof engine", "Proof surface", "Kept test", "Fail-demonstration",
     "Characterization test", "Test oracle", "Proof-complete defect",
     "Pre-flight", "PR review", "UI proof",
+    "Mutant", "Mutation battery", "Mutation acceptance",
     "Review packet", "Policy", "Preference", "Diff budget", "Trust zone",
     "Seam", "Deep module", "Deletion test", "Design spec", "Feature plan",
     "Convergence", "Plan gate", "AFK", "HITL", "Handoff", "Conflict",

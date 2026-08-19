@@ -103,6 +103,50 @@ Key design rules:
   report the missing seam as an architectural finding and hand off to the
   architecture flow.
 
+## Mutation
+
+The canonical home of the mutation mechanic. Preflight and REVIEW-FORMAT carry
+it verbatim, and `tools/validate.py` keeps the copies identical. See ADR-0011:
+
+<!-- nitpickle:mutation -->
+Mutation is a mechanic, not a Review mode. It augments whichever mode is
+selected, and `policy.yaml: review.mutation` toggles it (`auto`, `on`, `off`,
+default `auto`).
+
+`auto` runs only when four conditions hold: `commands.test` exists, the change
+touches code that command exercises, the baseline is reproducibly green, and the
+projected cost fits `review.mutation_budget_s`. Otherwise stand down and name
+the condition that failed. A docs-only or config-only change satisfies the
+others and still has nothing to mutate. Never push through a red or flaky
+baseline, since a mutant run against one proves nothing.
+
+Where `commands.mutate` is configured, shell out to it and ingest its output as
+untrusted evidence. Otherwise inject by hand in an isolated worktree, one site
+at a time, restoring after each.
+
+Select inside the change under review, ranked by risk:
+
+- Only lines the change touches, at most one mutant per line.
+- Skip arid sites (logging, metrics, debug output, string formatting, trivial
+  accessors). A survivor there carries no signal.
+- Prefer voiding a whole function body first. One mutant, portable to any
+  language, and it finds a function no test pins at all.
+- Cap at `review.mutation_max`, default 12.
+
+Admit a mutant only if the mutated tree still builds. Discard one that does not
+compile and never count it as killed, or every uncompilable mutant reads as a
+passing test.
+
+A surviving Mutant is a Finding about the tests, never about the code. Report
+the site, the perturbation, and the fact that nothing failed, then route it to
+test-spec. Never assert that the unpinned behavior is wrong, which is a Test
+oracle question. Report survivors and counts, never a ratio or a score.
+
+Diff-scoped selection under-detects by design, since most mutants relevant to a
+change sit outside its changed lines. Prefer actionable over complete, and do
+not present the result as an exhaustive verdict on test quality.
+<!-- nitpickle:mutation -->
+
 ## Finding schema
 
 This is the canonical home of the schema. Preflight and REVIEW-FORMAT carry it

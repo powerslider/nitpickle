@@ -90,6 +90,10 @@ one's interface is nearly as complex as its implementation).
 
 Plus the PR-specific checks (REVIEW-FORMAT.md):
 
+- **Mutation** - when the toggle allows it, inject faults into the lines the PR
+  touches and report every Mutant nothing failed against, per the Mutation
+  section of REVIEW-FORMAT.md. A survivor is a Finding about the tests, never
+  about the code.
 - **Intent check** - does the diff actually do what the PR claims? Less (gap) or
   more (scope creep, unrelated changes)?
 - **Compatibility/migration** - public surface or data shape changed without a

@@ -62,7 +62,9 @@ Pressure-test along these axes:
 - **Proof surface.** Where will `$nitpickle:preflight` be able to prove a regression in
   this change? If there is no correct seam to test the real behavior, that is a
   design problem to solve *now*, not after the patch. The absence of a proof
-  seam is itself an architectural finding.
+  seam is itself an architectural finding. Where a phase could plausibly ship a
+  test that passes without discriminating, ask what perturbation must fail and
+  record it as a Mutation acceptance criterion in the plan.
 - **Diff budget.** If the change will exceed `policy.yaml: diff_budget`, plan the
   split into reviewable vertical slices before coding.
 

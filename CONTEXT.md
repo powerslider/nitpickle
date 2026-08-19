@@ -78,7 +78,17 @@ convention in Matt Pocock's engineering skills.
   review surface for UI behaviour.
 - **Review mode** - a lens that shapes what a review emphasizes (fast scan, deep,
   security, concurrency, performance, api design, test coverage, migration,
-  release-risk). All modes obey Proof-gated severity.
+  release-risk). All modes obey Proof-gated severity. Mutation is not a mode, it
+  is a mechanic that augments whichever one is selected.
+- **Mutant** - a single semantic perturbation of the code under review. Killed
+  when a test fails against it, surviving when none does. A surviving Mutant is a
+  gap in the tests, never a defect in the code. See ADR-0011.
+- **Mutation battery** - the bounded set of Mutants computed for one target,
+  ephemeral by construction and discarded after use, in the same category as the
+  throwaway proof test. Never stored, never scored.
+- **Mutation acceptance** - a Proof surface criterion in a Feature plan phase
+  naming the perturbation the phase's tests must catch. Stated as a behavior
+  rather than a file and line, because a plan precedes the code.
 - **Review packet** - the bundle a PR review presents before anything is posted:
   executive summary, risk, approval recommendation, intent check, and ranked
   Findings with suggested comments. The reviewable artifact, not raw actions.

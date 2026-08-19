@@ -65,6 +65,13 @@ Infer language and commands from the repo:
 Otherwise read the CI config for the canonical commands. If unsure, leave
 `commands` blank with a comment and tell the user to fill them.
 
+Also look for a mutation tool the repo already has, and set `commands.mutate`
+when one is configured: gremlins or go-mutesting (Go), cargo-mutants (Rust),
+mutmut or cosmic-ray (Python), Stryker (JavaScript, TypeScript, or C#), PIT
+(JVM), mutant (Ruby). Detect only what is already there. Never add a dependency,
+install a tool, or write its config, and leave the key unset when none is
+present.
+
 ## 2. Write .nitpickle/policy.yaml
 
 - If a global default exists at `~/.config/nitpickle/policy.yaml`, write a **lean**

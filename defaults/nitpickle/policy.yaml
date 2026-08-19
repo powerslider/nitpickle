@@ -20,6 +20,9 @@ commands: {}
   # test: <repo test command>
   # lint: <repo lint command>
   # vuln: <repo vulnerability scan>
+  # mutate: <mutation tool, if the repo already has one>
+  #   Optional. When set, the mutation mechanic shells out to it instead of
+  #   injecting by hand. NitPickle never installs or configures the tool.
 
 # Universal judgment rules. Language-agnostic. Add language-specific ones locally.
 rules:
@@ -47,9 +50,14 @@ diff_budget:
   max_lines_soft: 300
   max_files_soft: 10
 
-# PR review defaults (used by review-pr).
+# Review defaults (used by review-pr and preflight).
+# mutation is a mechanic, not a mode. It augments whichever mode is selected.
+# The conditions auto checks live with the mechanic, not here.
 review:
   default_mode: deep
+  mutation: auto           # auto | on | off
+  mutation_max: 12         # mutants per target
+  mutation_budget_s: 300   # stand down when the projected cost exceeds this
 
 # Severity gating. blocking requires a runnable Proof. The trust mechanic.
 # Do not change without understanding ADR-0001.
