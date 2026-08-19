@@ -44,12 +44,14 @@ Read, if present (skip silently if absent):
   Where the design embodies an ADR, cite it (`see ADR-NNNN`).
 - `.nitpickle/preferences.md` / `policy.yaml` - apply taste. Respect the trust
   model when describing integration boundaries.
+- `.nitpickle/principles.md` - the engineering principles. Apply them to the
+  design's tradeoffs and component ownership.
 
 <!-- nitpickle:resolution -->
-Config resolution for `policy.yaml` and `preferences.md`: read the repo-local
-`.nitpickle/<file>` and the global default at `~/.claude/nitpickle/<file>` and
-merge them. Local overrides global per top-level key, `rules` is the union of
-both, and when only one exists it applies unchanged.
+Config resolution for `policy.yaml`, `preferences.md`, and `principles.md`: read
+the repo-local `.nitpickle/<file>` and the global default at
+`~/.claude/nitpickle/<file>` and merge them. Local overrides global per top-level
+key, `rules` is the union of both, and when only one exists it applies unchanged.
 <!-- nitpickle:resolution -->
 
 ### 3. Understand the system

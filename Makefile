@@ -1,9 +1,16 @@
-.PHONY: test lint check bump install-hooks
+.PHONY: test lint check bump install-hooks seed-defaults
 
 # Install the Codex write guardrail (hooks) into the user's home. A Codex plugin
 # cannot carry hooks, so run this after `codex plugin add`, then trust with /hooks.
+# It also seeds the global defaults.
 install-hooks:
 	python3 tools/install-hooks.py
+
+# Seed the global default config so any repo inherits it. HARNESS defaults to
+# claude, pass HARNESS=codex for Codex. Existing files are kept, add FORCE=1 to
+# overwrite. Usage: make seed-defaults [HARNESS=claude|codex] [FORCE=1]
+seed-defaults:
+	python3 tools/seed_defaults.py --harness $(or $(HARNESS),claude) $(if $(FORCE),--force,)
 
 test:
 	python3 -m unittest discover -s hooks -p "test_*.py"

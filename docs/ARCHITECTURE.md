@@ -15,7 +15,7 @@ skills/codex/*/SKILL.md         the same fourteen, Codex-optimized ($nitpickle: 
 hooks/                          house-style + write guardrail (shared)
 .claude-plugin/ .codex-plugin/  per-harness plugin manifests
 .agents/plugins/                the Codex marketplace registry
-.nitpickle/                     policy (rules + commands), taste, working state
+.nitpickle/                     policy (rules + commands), taste, principles, working state
 CONTEXT.md + docs/adr/          glossary + decisions (per repo)
 tools/ + .github/workflows/     this repo's own consistency proof seam
 ```
@@ -195,11 +195,13 @@ Pocock's skills and is load-bearing - don't collapse them):
 | **Glossary** | domain *language* - terms only, no implementation | `CONTEXT.md` (+ `CONTEXT-MAP.md` for multi-context repos) |
 | **Decisions** | choices already made, not to be re-litigated | `docs/adr/` |
 | **Taste** | the user's personal engineering preferences | `.nitpickle/preferences.md` |
+| **Principles** | engineering craft, how to write and review code, the full portable set of heuristics | `.nitpickle/principles.md` (see ADR-0012) |
 
 Reviews **speak the glossary**, **respect the ADRs** (a finding that contradicts
-an accepted ADR is surfaced as a question, never asserted), and **apply the
-taste**. A change that introduces a concept absent from `CONTEXT.md` is itself a
-prompt to name it.
+an accepted ADR is surfaced as a question, never asserted), **apply the taste**,
+and **run the principles** on code-touching work. A change that introduces a
+concept absent from `CONTEXT.md` is itself a prompt to name it. The code-touching
+skills consult `principles.md`, the utility skills do not (see ADR-0012).
 
 ## Policy engine
 

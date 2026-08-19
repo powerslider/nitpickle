@@ -19,6 +19,8 @@ its defaults):
 
 - `.nitpickle/policy.yaml` - linter/test commands and judgment `rules`.
 - `.nitpickle/preferences.md` - the user's engineering taste. Apply it.
+- `.nitpickle/principles.md` - the engineering principles. Apply them to how you
+  write and review code.
 - `CONTEXT.md` (+ `CONTEXT-MAP.md`) - the domain glossary. **Speak these terms
   exactly** in findings. Flag a change that needs a concept not yet named here.
 - `docs/adr/` - recorded decisions. **Do not re-litigate them.** A finding that
@@ -32,10 +34,10 @@ its defaults):
 Glossary, decisions, and taste are three separate inputs - apply all three.
 
 <!-- nitpickle:resolution -->
-Config resolution for `policy.yaml` and `preferences.md`: read the repo-local
-`.nitpickle/<file>` and the global default at `~/.claude/nitpickle/<file>` and
-merge them. Local overrides global per top-level key, `rules` is the union of
-both, and when only one exists it applies unchanged.
+Config resolution for `policy.yaml`, `preferences.md`, and `principles.md`: read
+the repo-local `.nitpickle/<file>` and the global default at
+`~/.claude/nitpickle/<file>` and merge them. Local overrides global per top-level
+key, `rules` is the union of both, and when only one exists it applies unchanged.
 <!-- nitpickle:resolution -->
 
 ## Trust zones (enforce before anything else)

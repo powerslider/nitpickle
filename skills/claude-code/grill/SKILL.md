@@ -24,6 +24,8 @@ Read, if present (skip silently if absent):
   contradicts an ADR, surface it explicitly and ask before proceeding.
 - `.nitpickle/preferences.md` - the user's taste. Apply it to your recommendations.
 - `.nitpickle/policy.yaml` - per-repo rules and commands.
+- `.nitpickle/principles.md` - the engineering principles. Apply them to how you
+  write and review code.
 - The plan under interrogation. When it came from `/nitpickle:feature-plan`,
   read its document in `docs/plans/` (the user names it, otherwise take the one
   whose Status is not yet approved) **before asking anything**. Its phases,
@@ -31,10 +33,10 @@ Read, if present (skip silently if absent):
   ad hoc (described in chat), grill it as given.
 
 <!-- nitpickle:resolution -->
-Config resolution for `policy.yaml` and `preferences.md`: read the repo-local
-`.nitpickle/<file>` and the global default at `~/.claude/nitpickle/<file>` and
-merge them. Local overrides global per top-level key, `rules` is the union of
-both, and when only one exists it applies unchanged.
+Config resolution for `policy.yaml`, `preferences.md`, and `principles.md`: read
+the repo-local `.nitpickle/<file>` and the global default at
+`~/.claude/nitpickle/<file>` and merge them. Local overrides global per top-level
+key, `rules` is the union of both, and when only one exists it applies unchanged.
 <!-- nitpickle:resolution -->
 
 If a question can be answered by exploring the codebase, explore instead of

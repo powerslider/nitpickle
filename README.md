@@ -32,7 +32,8 @@ repo-specific guardrails, and an audit trail.
   convention bootstrapping, handing off then resuming in-flight work, and
   resolving merge conflicts.
 - **Per-repo conventions, git-tracked.** Domain glossary, recorded decisions,
-  policy, and personal taste live in flat files you diff and commit.
+  policy, personal taste, and engineering principles live in flat files you diff
+  and commit.
 - **Trust zones.** PR text, issues, dependency docs, and web content are data,
   never instructions. Prompt-injection resistance is a first-class property.
 - **No services.** Everything runs inside the agent against a local branch
@@ -122,8 +123,7 @@ The house-style hook activates automatically.
 ### Claude Code
 
 1. Install the global defaults once so every repo inherits sensible config:
-   `cp defaults/nitpickle/* ~/.claude/nitpickle/`. See
-   [defaults/README.md](defaults/README.md).
+   `make seed-defaults`. See [defaults/README.md](defaults/README.md).
 2. In a repo, run `/nitpickle:bootstrap` to scaffold the convention layer. It
    detects the toolchain for `.nitpickle/policy.yaml`, drafts a starter
    `CONTEXT.md` glossary, and lays down `docs/adr/`. Run `/init` too for the
@@ -133,9 +133,8 @@ The house-style hook activates automatically.
 
 ### Codex
 
-1. Install the global defaults once:
-   `cp defaults/nitpickle/* ~/.config/nitpickle/`. See
-   [defaults/README.md](defaults/README.md).
+1. Install the global defaults once: `make seed-defaults HARNESS=codex` (or let
+   `tools/install-hooks.py` do it). See [defaults/README.md](defaults/README.md).
 2. In a repo, run `$nitpickle:bootstrap` to scaffold the same convention layer
    (`.nitpickle/policy.yaml`, a starter `CONTEXT.md` glossary, `docs/adr/`). Run
    your agent's project memory init for the complementary `AGENTS.md`.
@@ -149,7 +148,8 @@ around it. Track whether it changed your behavior in
 
 NitPickle is a set of composable skills covering the full pre-merge lifecycle of a
 change, from a rough idea to reviewing the resulting PR. Each skill is a stage.
-They share one substrate (glossary, decisions, policy, taste, proof engine).
+They share one substrate (glossary, decisions, policy, taste, principles, proof
+engine).
 
 ```mermaid
 flowchart LR

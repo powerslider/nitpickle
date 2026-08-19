@@ -2,27 +2,32 @@
 
 The default `.nitpickle` config that applies to any repo with no local
 `.nitpickle/`. Install it once to the global location and every repo inherits it.
+The directory holds `policy.yaml`, `preferences.md`, and `principles.md`.
 
-From a clone of this repo:
+From a clone of this repo, seed all of them at once:
 
 ```sh
-mkdir -p ~/.claude/nitpickle
-cp defaults/nitpickle/policy.yaml      ~/.claude/nitpickle/policy.yaml
-cp defaults/nitpickle/preferences.md   ~/.claude/nitpickle/preferences.md
+make seed-defaults              # Claude Code (~/.claude/nitpickle/)
+make seed-defaults HARNESS=codex   # Codex (~/.config/nitpickle/)
 ```
 
+The seeder globs the whole directory, so every default (including any added
+later) is installed. It never overwrites a file you have customized, pass
+`FORCE=1` to refresh.
+
 When NitPickle is installed as a plugin, these same files ship inside the plugin
-at `${CLAUDE_PLUGIN_ROOT}/defaults/nitpickle/`. Copy them to `~/.claude/nitpickle/`
-the same way.
+at `${CLAUDE_PLUGIN_ROOT}/defaults/nitpickle/`. Seed them with
+`python3 ${CLAUDE_PLUGIN_ROOT}/tools/seed_defaults.py --harness claude` (or
+`--harness codex`). On Codex, `tools/install-hooks.py` seeds them for you.
 
 ## Resolution (how skills pick config)
 
 Effective config = global defaults overlaid by repo-local.
 
-- **policy.yaml** and **preferences.md**: the repo-local `.nitpickle/<file>`
-  overrides the global `~/.claude/nitpickle/<file>` per top-level key. The `rules`
-  list is the union of global and local. A repo with no local `.nitpickle/` at all
-  uses the global defaults unchanged.
+- **policy.yaml**, **preferences.md**, and **principles.md**: the repo-local
+  `.nitpickle/<file>` overrides the global `~/.claude/nitpickle/<file>` per
+  top-level key. The `rules` list is the union of global and local. A repo with no
+  local `.nitpickle/` at all uses the global defaults unchanged.
 - **CONTEXT.md**, **docs/adr/**, and **validation-log.md** are always per-repo.
   There is no global version. A repo without them simply has no glossary,
   decisions, or log yet.

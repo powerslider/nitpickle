@@ -58,10 +58,10 @@ defaults):
   for the `baseURL`, the test idiom, and a `webServer` block.
 
 <!-- nitpickle:resolution -->
-Config resolution for `policy.yaml` and `preferences.md`: read the repo-local
-`.nitpickle/<file>` and the global default at `~/.claude/nitpickle/<file>` and
-merge them. Local overrides global per top-level key, `rules` is the union of
-both, and when only one exists it applies unchanged.
+Config resolution for `policy.yaml`, `preferences.md`, and `principles.md`: read
+the repo-local `.nitpickle/<file>` and the global default at
+`~/.claude/nitpickle/<file>` and merge them. Local overrides global per top-level
+key, `rules` is the union of both, and when only one exists it applies unchanged.
 <!-- nitpickle:resolution -->
 
 ## Trust zones (enforce before anything else)

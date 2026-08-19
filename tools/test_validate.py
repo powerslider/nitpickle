@@ -14,7 +14,13 @@ import tempfile
 import unittest
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-IGNORE = shutil.ignore_patterns(".git", "__pycache__", "node_modules", "*.pyc")
+# The temp copy has no .git, so the validator scans the working tree. Mirror the
+# tracked tree by dropping the gitignored ephemeral dirs (reviews, audits, plans,
+# serena state), which are not what the validator checks in a real repo.
+IGNORE = shutil.ignore_patterns(
+    ".git", "__pycache__", "node_modules", "*.pyc",
+    "reviews", "audits", "plans", ".serena", ".codex", "node_modules",
+)
 
 
 def run_validator(root):
@@ -58,6 +64,15 @@ class ValidatorRejectsDrift(unittest.TestCase):
         result = run_validator(self.root)
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("Mutation battery", result.stdout)
+
+    def test_code_skill_dropping_principles_is_caught(self):
+        self.edit(
+            os.path.join("skills", "claude-code", "polish", "SKILL.md"),
+            "`.nitpickle/principles.md`", "`.nitpickle/preferences-again.md`",
+        )
+        result = run_validator(self.root)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("principles.md", result.stdout)
 
 
 if __name__ == "__main__":

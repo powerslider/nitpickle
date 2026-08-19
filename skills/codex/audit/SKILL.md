@@ -26,16 +26,18 @@ defaults):
   `rules`.
 - `.nitpickle/preferences.md` - the user's engineering taste, applied to what counts as
   a quality concern worth routing.
+- `.nitpickle/principles.md` - the engineering principles. Apply them to how you
+  write and review code.
 - `CONTEXT.md` (+ `CONTEXT-MAP.md`) - the domain glossary. Speak these terms exactly,
   and name a reconstructed component in them.
 - `docs/adr/` - recorded decisions. Read the target against them, a finding that
   contradicts an accepted decision is a question, never an assertion.
 
 <!-- nitpickle:resolution -->
-Config resolution for `policy.yaml` and `preferences.md`: read the repo-local
-`.nitpickle/<file>` and the global default at `~/.config/nitpickle/<file>` and
-merge them. Local overrides global per top-level key, `rules` is the union of
-both, and when only one exists it applies unchanged.
+Config resolution for `policy.yaml`, `preferences.md`, and `principles.md`: read
+the repo-local `.nitpickle/<file>` and the global default at
+`~/.config/nitpickle/<file>` and merge them. Local overrides global per top-level
+key, `rules` is the union of both, and when only one exists it applies unchanged.
 <!-- nitpickle:resolution -->
 
 ## Trust zones (enforce before anything else)

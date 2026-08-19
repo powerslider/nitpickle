@@ -13,6 +13,9 @@ import os
 import shutil
 import sys
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from seed_defaults import seed_defaults
+
 HOOK_SCRIPTS = ("no-agent-writes.py", "no-emdash-semicolon.py")
 
 
@@ -103,6 +106,12 @@ def main():
     home = sys.argv[1] if len(sys.argv) > 1 else None
     hooks_dst = install_hooks(root, home)
     print("installed guardrail hooks to %s, trust them once with /hooks" % hooks_dst)
+
+    dst_dir, seeded, skipped = seed_defaults(root, "codex", home)
+    print("seeded %d default file(s) to %s" % (len(seeded), dst_dir))
+    if skipped:
+        print("  skipped (already present, use seed_defaults.py --force to overwrite): %s"
+              % ", ".join(skipped))
 
 
 if __name__ == "__main__":

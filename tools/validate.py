@@ -27,6 +27,9 @@ full tree hand-optimized for its harness. Checks:
   11. The resolution block, which is harness-specific, is identical across every
      skill within a tree, so it cannot drift within a tree.
   12. Every shipped skill has a description section in docs/skills.md.
+  13. Every code-touching skill references .nitpickle/principles.md in both trees,
+     so the engineering principles cannot be silently dropped from a skill's load
+     section.
 
 PyYAML sharpens check 1 and 2 when installed (it is a CI dependency, not a
 runtime one). Without it the checks degrade to regex on the raw lines.
@@ -114,6 +117,14 @@ LOAD_BEARING_TERMS = (
 COLLISION_PHRASES = (
     '"plan this"',
     "stress-test",
+)
+
+# Skills that write or review code, so they consult the engineering principles.
+# Each must reference .nitpickle/principles.md in its load section, in both trees.
+# Update this list if the code-touching set changes (see ADR-0012).
+CODE_SKILLS = (
+    "preflight", "review-pr", "polish", "test-spec",
+    "audit", "grill", "feature-plan", "design-spec",
 )
 
 failures = []
@@ -365,6 +376,18 @@ def check_resolution_blocks(root):
                 )
 
 
+def check_code_skills_principles(root):
+    """Check 13. Each code-touching skill must consult .nitpickle/principles.md in
+    both trees, so the engineering principles cannot be silently dropped. Anchored
+    on the `.nitpickle/`-prefixed form the load sections use, since the resolution
+    block already names a bare `principles.md` and would pass this vacuously."""
+    for h in HARNESSES:
+        for name in CODE_SKILLS:
+            path = os.path.join(root, "skills", h, name, "SKILL.md")
+            if ".nitpickle/principles.md" not in read(path):
+                fail(f"skills/{h}/{name}/SKILL.md does not reference .nitpickle/principles.md")
+
+
 def check_canonical_blocks(root):
     for block_file, canonical_file, marker in CANONICAL_BLOCKS:
         copy = _block(read(os.path.join(root, block_file)), marker)
@@ -408,6 +431,7 @@ def main():
     check_glossary_terms(root)
     check_canonical_blocks(root)
     check_resolution_blocks(root)
+    check_code_skills_principles(root)
 
     for w in warnings:
         print(f"warning: {w}")

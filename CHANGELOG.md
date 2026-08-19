@@ -4,6 +4,24 @@ One entry per released version. Bump the version across the plugin manifests for
 every release (`make bump VERSION=x.y.z` keeps the Claude and Codex manifests in
 sync), and add the entry here.
 
+## 0.12.0
+
+- Engineering principles join the convention layer as `.nitpickle/principles.md`,
+  a portable set of craft heuristics the code-touching skills consult by default
+  (`preflight`, `review-pr`, `polish`, `test-spec`, `audit`, `grill`,
+  `feature-plan`, `design-spec`). It carries the full set of principles as a
+  standalone document (complexity earns its place, reason about the dominant cost,
+  one component owns a piece of state end to end, and so on), not a commentary on
+  what NitPickle already enforces (ADR-0012).
+- It is a separate file, not a `preferences.md` section, keeping craft distinct
+  from taste. It resolves local-plus-global through the existing byte-synced
+  resolution block, and a new validator check keeps any code-touching skill from
+  silently dropping it. The utility skills do not consult it.
+- Global defaults now seed automatically. `make seed-defaults` (or
+  `tools/seed_defaults.py`) globs `defaults/nitpickle/` into the harness config,
+  so a new default is installed with no change to the seeder and a customized file
+  is never overwritten. On Codex, `tools/install-hooks.py` seeds them for you.
+
 ## 0.11.0
 
 - Mutation joins the proof engine as a mechanic rather than a skill. `preflight`

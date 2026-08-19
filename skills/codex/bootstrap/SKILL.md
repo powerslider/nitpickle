@@ -80,10 +80,10 @@ present.
   the universal rules. They come from global via the resolution rule:
 
 <!-- nitpickle:resolution -->
-Config resolution for `policy.yaml` and `preferences.md`: read the repo-local
-`.nitpickle/<file>` and the global default at `~/.config/nitpickle/<file>` and
-merge them. Local overrides global per top-level key, `rules` is the union of
-both, and when only one exists it applies unchanged.
+Config resolution for `policy.yaml`, `preferences.md`, and `principles.md`: read
+the repo-local `.nitpickle/<file>` and the global default at
+`~/.config/nitpickle/<file>` and merge them. Local overrides global per top-level
+key, `rules` is the union of both, and when only one exists it applies unchanged.
 <!-- nitpickle:resolution -->
 - If no global default exists, write a fuller policy seeded from the bundled
   defaults plus the detected commands.
@@ -147,11 +147,17 @@ Both files are per-developer working state, not shared conventions. Add
 `.gitignore` (create the file if absent). The other `.nitpickle/` artifacts stay
 tracked as shared conventions.
 
-## 6. Preferences
+## 6. Preferences and principles
 
-Global preferences at `~/.config/nitpickle/preferences.md` already apply. Create a
-local `.nitpickle/preferences.md` only if the user wants repo-specific taste, and
-then keep it to what differs from global. Do not duplicate global.
+Global preferences at `~/.config/nitpickle/preferences.md` and the engineering
+principles at `~/.config/nitpickle/principles.md` already apply through config
+resolution. Create a local `.nitpickle/preferences.md` only if the user wants
+repo-specific taste, and a local `.nitpickle/principles.md` only if the repo needs
+principles that differ from global. Keep either to what differs. Do not duplicate
+global. If the global defaults are not seeded yet (no
+`~/.config/nitpickle/principles.md`), tell the user to seed them once with the
+NitPickle seeder (`tools/seed_defaults.py`, see `defaults/README.md`), so every
+repo inherits them.
 
 ## 7. Summarize
 

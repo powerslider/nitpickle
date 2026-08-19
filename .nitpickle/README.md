@@ -9,6 +9,7 @@ human-editable. Diff and commit these like code. Nothing here is invisible.
 | --- | --- | --- | --- |
 | `policy.yaml` | commands to run, judgment rules, generated files, diff budget, review defaults, proof gating | you | every skill |
 | `preferences.md` | your personal engineering taste and house writing style | you | every skill |
+| `principles.md` | engineering principles applied to writing and reviewing code | you (usually the global default) | code-touching skills |
 | `validation-log.md` | did pre-flight change your behavior (the metric) | preflight | you |
 | `todo.md` | findings you deferred during a review run | preflight, review-pr | you |
 
@@ -25,15 +26,16 @@ rather than in here.
 | `CONTEXT.md` | domain glossary, terms only, no implementation | Matt Pocock |
 | `docs/adr/` | recorded decisions, one per file (template: `0000-template.md`) | ADR |
 
-## Four separate things, on purpose
+## Five separate things, on purpose
 
 - **policy.yaml** is per-repo rules.
 - **preferences.md** is personal taste.
+- **principles.md** is engineering craft (how to write and review code).
 - **CONTEXT.md** is shared language.
 - **docs/adr/** is decisions.
 
 Do not merge them. A review speaks the glossary, respects the ADRs, applies your
-taste, and runs the policy commands and rules.
+taste and the principles, and runs the policy commands and rules.
 
 ## Global defaults and resolution
 
@@ -42,8 +44,9 @@ rule. Every skill carries it verbatim, and `tools/validate.py` keeps the copies
 identical:
 
 <!-- nitpickle:resolution -->
-Config resolution for `policy.yaml` and `preferences.md`: read the repo-local
-`.nitpickle/<file>` and the global default (`~/.config/nitpickle/<file>`, or `~/.claude/nitpickle/<file>` on Claude Code) and
+Config resolution for `policy.yaml`, `preferences.md`, and `principles.md`: read
+the repo-local `.nitpickle/<file>` and the global default
+(`~/.config/nitpickle/<file>`, or `~/.claude/nitpickle/<file>` on Claude Code) and
 merge them. Local overrides global per top-level key, `rules` is the union of
 both, and when only one exists it applies unchanged.
 <!-- nitpickle:resolution -->
@@ -51,10 +54,12 @@ both, and when only one exists it applies unchanged.
 - **CONTEXT.md**, **docs/adr/**, **validation-log.md**, **todo.md**: always
   per-repo, no global version.
 
-The global defaults are language-agnostic (cross-project taste and universal
-rules). Keep toolchain commands and language-specific rules in the local file.
-The shipped copy of the defaults lives in `defaults/nitpickle/` (install it with
-the commands in `defaults/README.md`).
+The global defaults are language-agnostic (cross-project taste, universal rules,
+and the engineering principles). Keep toolchain commands and language-specific
+rules in the local file. The shipped copy of the defaults lives in
+`defaults/nitpickle/`, seed it with `make seed-defaults` (see
+`defaults/README.md`). Most repos consult `principles.md` from the global default
+and never keep a local copy.
 
 ## Trust zones
 

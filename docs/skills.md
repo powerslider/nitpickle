@@ -123,7 +123,7 @@ toward the repo's idioms and taste.
 
 The inverse of `preflight`: where preflight reviews and proves defects, polish
 transforms and proves preservation. It reads the same convention layer (glossary,
-preferences, ADRs, policy) that generic cleanup tools cannot see, and proposes
+preferences, principles, ADRs, policy) that generic cleanup tools cannot see, and proposes
 each change as a **Refinement**: a structural transform (reuse, altitude judged by
 the deletion test, dead code) carrying a **behavior-preservation proof** built in
 an isolated worktree. The proof is tiered, the policy commands when they cover the
