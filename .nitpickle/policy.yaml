@@ -26,6 +26,8 @@ context:
 commands:
   test: make test
   lint: make lint
+  # mutate: unset. No mutation tool for a markdown and python skills repo, so
+  #   the mutation mechanic injects by hand when it runs at all.
 
 # Judgment rules. NitPickle proves each before flagging it blocking.
 rules:
@@ -54,9 +56,14 @@ diff_budget:
   max_lines_soft: 300
   max_files_soft: 10
 
-# PR review defaults (used by review-pr).
+# Review defaults (used by review-pr and preflight).
+# mutation is a mechanic, not a mode. It augments whichever mode is selected.
+# The conditions auto checks live with the mechanic, not here. See ADR-0011.
 review:
   default_mode: deep
+  mutation: auto           # auto | on | off
+  mutation_max: 12         # mutants per target
+  mutation_budget_s: 300   # stand down when the projected cost exceeds this
 
 # Severity gating. blocking requires a runnable Proof. The trust mechanic.
 # Do not change without understanding ADR-0001.

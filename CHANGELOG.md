@@ -4,6 +4,37 @@ One entry per released version. Bump the version across the plugin manifests for
 every release (`make bump VERSION=x.y.z` keeps the Claude and Codex manifests in
 sync), and add the entry here.
 
+## 0.11.0
+
+- Mutation joins the proof engine as a mechanic rather than a skill. `preflight`
+  and `review-pr` inject faults into the lines under review and report every
+  Mutant nothing failed against, the only signal here that catches a test whose
+  assertions were hollowed out while it kept its name and kept passing. Coverage
+  does not move for that. Selection is diff-scoped, one mutant per line, arid
+  sites skipped, capped by policy.
+- It is a Policy toggle, not a Review mode (ADR-0011). Modes are single-select
+  attention lenses and this composes with all of them, so `review.mutation`
+  defaults to `auto`, running only when a test command exists, the change touches
+  code that command exercises, the baseline is reproducibly green, and the
+  projected cost fits `review.mutation_budget_s`. Otherwise it stands down and
+  names the failed condition rather than pushing through a red or flaky baseline.
+- A Mutation battery is ephemeral by construction (ADR-0011). Nothing is stored,
+  tracked, or cached, and a mutation score is never a gate. A surviving Mutant is
+  a Finding about the tests, routed to `test-spec`, never a claim about the code.
+  Honest limits: a persisted replayable battery was designed and rejected, since
+  it duplicates source into a second location that decays and churns every pull
+  request touching the code it covers, and diff-scoped selection under-detects,
+  because most mutants relevant to a change sit outside its changed lines.
+- A Feature plan phase can name Mutation acceptance in its Proof surface, stated
+  as a behavior rather than a file and line, so `grill` records what perturbation
+  must fail and `preflight` checks a branch against the bar its own plan set.
+  `bootstrap` detects an existing mutation tool and sets `commands.mutate`,
+  never installing or configuring one.
+- Glossary gains Mutant, Mutation battery, and Mutation acceptance. The validator
+  gains its first test, pinning that it rejects a drifted canonical block copy
+  and a load-bearing term with no glossary entry, the guards keeping 38 block
+  copies identical across both harness trees.
+
 ## 0.10.0
 
 - NitPickle installs natively on both Claude Code and Codex. Each harness has its

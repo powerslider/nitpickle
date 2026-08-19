@@ -76,6 +76,47 @@ because the demonstrated absence of a proof seam is the evidence. Enforced,
 not advisory.
 <!-- nitpickle:finding-schema -->
 
+## Mutation
+
+<!-- nitpickle:mutation -->
+Mutation is a mechanic, not a Review mode. It augments whichever mode is
+selected, and `policy.yaml: review.mutation` toggles it (`auto`, `on`, `off`,
+default `auto`).
+
+`auto` runs only when four conditions hold: `commands.test` exists, the change
+touches code that command exercises, the baseline is reproducibly green, and the
+projected cost fits `review.mutation_budget_s`. Otherwise stand down and name
+the condition that failed. A docs-only or config-only change satisfies the
+others and still has nothing to mutate. Never push through a red or flaky
+baseline, since a mutant run against one proves nothing.
+
+Where `commands.mutate` is configured, shell out to it and ingest its output as
+untrusted evidence. Otherwise inject by hand in an isolated worktree, one site
+at a time, restoring after each.
+
+Select inside the change under review, ranked by risk:
+
+- Only lines the change touches, at most one mutant per line.
+- Skip arid sites (logging, metrics, debug output, string formatting, trivial
+  accessors). A survivor there carries no signal.
+- Prefer voiding a whole function body first. One mutant, portable to any
+  language, and it finds a function no test pins at all.
+- Cap at `review.mutation_max`, default 12.
+
+Admit a mutant only if the mutated tree still builds. Discard one that does not
+compile and never count it as killed, or every uncompilable mutant reads as a
+passing test.
+
+A surviving Mutant is a Finding about the tests, never about the code. Report
+the site, the perturbation, and the fact that nothing failed, then route it to
+test-spec. Never assert that the unpinned behavior is wrong, which is a Test
+oracle question. Report survivors and counts, never a ratio or a score.
+
+Diff-scoped selection under-detects by design, since most mutants relevant to a
+change sit outside its changed lines. Prefer actionable over complete, and do
+not present the result as an exhaustive verdict on test quality.
+<!-- nitpickle:mutation -->
+
 ## Procedure
 
 ### 1. Scope
@@ -104,10 +145,18 @@ ignored `context` cancellation, dropped error context, concurrency hazards a
 static pass misses, public API changes without migration notes, anything in
 `policy.yaml: rules` or `preferences.md`.
 
+**Mutation** (see the Mutation section above, when the toggle allows it): inject
+faults into the lines this branch touches and report every Mutant nothing
+failed against. A survivor is a candidate Finding about the tests, and the
+mutant itself is its proof, so it skips the strategy menu in step 4.
+
 **Plan intent check** (only when an approved plan matched this branch): verify
 the branch delivers what the plan's matching phase intends - its goal, scope,
 and non-goals. A mismatch (the diff does less, more, or different) is a
-Finding. This is a scoped intent comparison, not a re-grill of the plan.
+Finding. This is a scoped intent comparison, not a re-grill of the plan. Where
+the phase names Mutation acceptance criteria, apply each one as a mutant. A
+criterion whose perturbation survives is a Finding, and the phase has not met
+its own stated bar.
 
 For abstraction findings, use the deletion test and the deep/shallow-module
 vocabulary instead of a vague "premature abstraction": apply the deletion test

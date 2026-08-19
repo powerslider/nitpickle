@@ -50,12 +50,19 @@ Per phase:
 | **Goal** | what this slice delivers, observable |
 | **Scope / non-goals** | what it does and deliberately doesn't touch |
 | **Seams & components** | where it lives (glossary terms). Prefer existing seams |
-| **Proof surface** | how `/nitpickle:preflight` will prove it - where the test seam is. **No correct seam? That's prework**: add the architectural finding as an earlier phase. |
+| **Proof surface** | how `/nitpickle:preflight` will prove it - where the test seam is, plus any **Mutation acceptance** criteria. **No correct seam? That's prework**: add the architectural finding as an earlier phase. |
 | **Depends on** | blocking phases (none ⇒ can start immediately) |
 | **Type** | AFK (mergeable without human judgment) or HITL (needs a decision/review) - prefer AFK |
 | **Risks** | and their mitigations |
 | **Rollback** | how to undo this slice |
 | **Size** | rough diff budget. Split if over |
+
+**Mutation acceptance** names the perturbation a phase's tests must catch,
+written as a behavior rather than a file and line, because a plan precedes the
+code. "Flipping the epoch boundary comparison must fail a test" stays checkable
+however the code moves. Name one only where a phase carries real risk of a test
+that passes without discriminating. Pin a specific site only when it already
+exists and is stable.
 
 A Mermaid `flowchart` of phase dependencies helps when there are more than ~4
 phases or non-linear ordering.
