@@ -4,6 +4,13 @@ One entry per released version. Bump the version across the plugin manifests for
 every release (`make bump VERSION=x.y.z` keeps the Claude and Codex manifests in
 sync), and add the entry here.
 
+## 0.12.1
+
+- Preflight consults the engineering principles explicitly. A Principles pass
+  walks the diff against `principles.md`, focused on the lenses no linter covers,
+  and routes each concern through the proof gate. Single-sourced, no checklist
+  copy (ADR-0012).
+
 ## 0.12.0
 
 - Engineering principles join the convention layer as `.nitpickle/principles.md`,

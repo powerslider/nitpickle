@@ -145,7 +145,16 @@ hand-author findings for anything a linter already reports - ingest its result.
 Spend judgment only where linters can't: missing tests for error/edge paths,
 ignored `context` cancellation, dropped error context, concurrency hazards a
 static pass misses, public API changes without migration notes, anything in
-`policy.yaml: rules` or `preferences.md`.
+`policy.yaml: rules`, `preferences.md`, or `principles.md`.
+
+**Principles pass** (see `.nitpickle/principles.md`): walk the changed code
+against its checklist and raise a candidate Finding for each concern, especially
+the lenses no linter covers: whether one component owns a piece of state end to
+end, whether control flow is threaded through a closure only to make a path
+testable, whether a comment documents its caller, and which of two correct
+designs touches the expensive resource fewer times. Each concern still passes
+through the proof gate in step 4, so a verified one becomes a Finding and a
+judgment call caps at `nit` or `question`.
 
 **Mutation** (see the Mutation section above, when the toggle allows it): inject
 faults into the lines this branch touches and report every Mutant nothing
